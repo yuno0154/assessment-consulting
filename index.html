@@ -113,6 +113,30 @@
   .proposal-input.show { display: block; }
   .proposal-input textarea { width: 100%; border: 1px solid var(--accent); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 50px; outline: none; background: #fff5f5; }
 
+  /* 입력 모드 선택 */
+  .input-mode-selector { display: flex; gap: 12px; margin: 8px 0; }
+  .input-mode-selector label { display: flex; align-items: center; gap: 5px; font-size: 12px; cursor: pointer; }
+  .input-mode-selector input[type="radio"] { accent-color: var(--navy); }
+  .direct-input-area { margin-top: 6px; }
+  .direct-input-area textarea { width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 60px; outline: none; }
+  .direct-input-area textarea:focus { border-color: var(--navy); }
+  .direct-input-actions { display: flex; gap: 6px; margin-top: 4px; }
+  .direct-input-actions button { padding: 4px 10px; font-size: 11px; border: 1px solid var(--navy); background: var(--navy-light); color: var(--navy); border-radius: 4px; cursor: pointer; font-family: inherit; }
+  .direct-input-actions button:hover { background: var(--navy); color: white; }
+
+  /* 문장 선택 모달 */
+  .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal-box { background: white; border-radius: 10px; width: 90%; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 8px 30px rgba(0,0,0,0.3); }
+  .modal-header { padding: 14px 18px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { margin: 0; font-size: 15px; color: var(--navy); }
+  .modal-close { background: none; border: none; font-size: 22px; cursor: pointer; color: var(--gray); padding: 0; line-height: 1; }
+  .modal-close:hover { color: var(--navy); }
+  .modal-body { padding: 14px 18px; overflow-y: auto; flex: 1; }
+  .modal-body .library-sentence { padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 6px; cursor: pointer; font-size: 12px; line-height: 1.6; transition: all 0.15s; }
+  .modal-body .library-sentence:hover { background: var(--navy-light); border-color: var(--navy); }
+  .modal-empty { text-align: center; padding: 20px; color: var(--gray); font-size: 12px; }
+
   /* 수행평가 탭 */
   .perf-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
   .perf-tab {
@@ -243,9 +267,17 @@
             <label class="radio-btn"><input type="radio" name="item1" value="보완 요청" onchange="onItem1Change('보완 요청')"><span class="req">보완 요청</span></label>
           </div>
           <div class="preview-box" id="item1-preview"></div>
-          <div class="extra-opinion">
-            <label>추가 의견 (선택)</label>
-            <textarea id="item1-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+          <div class="input-mode-selector">
+            <label><input type="radio" name="item1-inputMode" value="library" onchange="onInputModeChange(-1, '1', 'library')"> 라이브러리</label>
+            <label><input type="radio" name="item1-inputMode" value="direct" onchange="onInputModeChange(-1, '1', 'direct')"> 직접 입력</label>
+          </div>
+          <div id="item1-direct-section" style="display:none;">
+            <div class="direct-input-area">
+              <textarea id="item1-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
+            </div>
+            <div class="direct-input-actions">
+              <button onclick="openSentenceModal(-1, '1')">📚 문장 선택</button>
+            </div>
           </div>
           <div class="proposal-area">
             <label class="proposal-check">
@@ -268,9 +300,17 @@
             <input type="text" id="item1_1-codes" placeholder="예) [12국01-03], [12국01-05]" oninput="onItem1_1Change()">
           </div>
           <div class="preview-box" id="item1_1-preview"></div>
-          <div class="extra-opinion">
-            <label>추가 의견 (선택)</label>
-            <textarea id="item1_1-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+          <div class="input-mode-selector">
+            <label><input type="radio" name="item1_1-inputMode" value="library" onchange="onInputModeChange(-1, '1_1', 'library')"> 라이브러리</label>
+            <label><input type="radio" name="item1_1-inputMode" value="direct" onchange="onInputModeChange(-1, '1_1', 'direct')"> 직접 입력</label>
+          </div>
+          <div id="item1_1-direct-section" style="display:none;">
+            <div class="direct-input-area">
+              <textarea id="item1_1-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
+            </div>
+            <div class="direct-input-actions">
+              <button onclick="openSentenceModal(-1, '1_1')">📚 문장 선택</button>
+            </div>
           </div>
         </div>
       </div>
@@ -365,8 +405,8 @@ let state = {
   schoolName: '',
   subjectName: '',
   perfCount: 0,
-  item1: { level: '', extra: '', propose: false, proposalText: '' },
-  item1_1: { codes: '', extra: '' },
+  item1: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
+  item1_1: { codes: '', inputMode: 'library', extra: '' },
   performances: []
 };
 
@@ -376,8 +416,8 @@ function getInitialState() {
     schoolName: '',
     subjectName: '',
     perfCount: 0,
-    item1: { level: '', extra: '', propose: false, proposalText: '' },
-    item1_1: { codes: '', extra: '' },
+    item1: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
+    item1_1: { codes: '', inputMode: 'library', extra: '' },
     performances: []
   };
 }
@@ -493,10 +533,10 @@ function onPerfCountChange(silent = false) {
 function createPerfState(idx) {
   return {
     name: '',
-    item2: { level: '', extra: '', propose: false, proposalText: '' },
-    item3476: { level: '', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
-    item8: { level: '', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
-    item5: { level: '', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
+    item2: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
+    item3476: { level: '', inputMode: 'library', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
+    item8: { level: '', inputMode: 'library', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
+    item5: { level: '', inputMode: 'library', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
     etc: ''
   };
 }
@@ -578,9 +618,17 @@ function renderItem2(i) {
       </div>
       <div class="preview-box" id="perf-${i}-item2-preview"></div>
       <div id="perf-${i}-item2-blanks"></div>
-      <div class="extra-opinion">
-        <label>추가 의견 (선택)</label>
-        <textarea id="perf-${i}-item2-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      <div class="input-mode-selector">
+        <label><input type="radio" name="perf-${i}-item2-inputMode" value="library" onchange="onInputModeChange(${i}, '2', 'library')"> 라이브러리</label>
+        <label><input type="radio" name="perf-${i}-item2-inputMode" value="direct" onchange="onInputModeChange(${i}, '2', 'direct')"> 직접 입력</label>
+      </div>
+      <div id="perf-${i}-item2-direct-section" style="display:none;">
+        <div class="direct-input-area">
+          <textarea id="perf-${i}-item2-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
+        </div>
+        <div class="direct-input-actions">
+          <button onclick="openSentenceModal(${i}, '2')">📚 문장 선택</button>
+        </div>
       </div>
       <div class="proposal-area">
         <label class="proposal-check">
@@ -644,9 +692,17 @@ function renderItem3476(i) {
       </div>
       <div class="preview-box" id="perf-${i}-item3476-preview"></div>
       <div id="perf-${i}-item3476-blanks"></div>
-      <div class="extra-opinion">
-        <label>추가 의견 (선택)</label>
-        <textarea id="perf-${i}-item3476-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      <div class="input-mode-selector">
+        <label><input type="radio" name="perf-${i}-item3476-inputMode" value="library" onchange="onInputModeChange(${i}, '3476', 'library')"> 라이브러리</label>
+        <label><input type="radio" name="perf-${i}-item3476-inputMode" value="direct" onchange="onInputModeChange(${i}, '3476', 'direct')"> 직접 입력</label>
+      </div>
+      <div id="perf-${i}-item3476-direct-section" style="display:none;">
+        <div class="direct-input-area">
+          <textarea id="perf-${i}-item3476-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
+        </div>
+        <div class="direct-input-actions">
+          <button onclick="openSentenceModal(${i}, '3476')">📚 문장 선택</button>
+        </div>
       </div>
       <div class="proposal-area">
         <label class="proposal-check">
@@ -691,9 +747,17 @@ function renderItem8(i) {
       </div>
       <div class="preview-box" id="perf-${i}-item8-preview"></div>
       <div id="perf-${i}-item8-blanks"></div>
-      <div class="extra-opinion">
-        <label>추가 의견 (선택)</label>
-        <textarea id="perf-${i}-item8-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      <div class="input-mode-selector">
+        <label><input type="radio" name="perf-${i}-item8-inputMode" value="library" onchange="onInputModeChange(${i}, '8', 'library')"> 라이브러리</label>
+        <label><input type="radio" name="perf-${i}-item8-inputMode" value="direct" onchange="onInputModeChange(${i}, '8', 'direct')"> 직접 입력</label>
+      </div>
+      <div id="perf-${i}-item8-direct-section" style="display:none;">
+        <div class="direct-input-area">
+          <textarea id="perf-${i}-item8-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
+        </div>
+        <div class="direct-input-actions">
+          <button onclick="openSentenceModal(${i}, '8')">📚 문장 선택</button>
+        </div>
       </div>
       <div class="proposal-area">
         <label class="proposal-check">
@@ -735,9 +799,17 @@ function renderItem5(i) {
       </div>
       <div class="preview-box" id="perf-${i}-item5-preview"></div>
       <div id="perf-${i}-item5-blanks"></div>
-      <div class="extra-opinion">
-        <label>추가 의견 (선택)</label>
-        <textarea id="perf-${i}-item5-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      <div class="input-mode-selector">
+        <label><input type="radio" name="perf-${i}-item5-inputMode" value="library" onchange="onInputModeChange(${i}, '5', 'library')"> 라이브러리</label>
+        <label><input type="radio" name="perf-${i}-item5-inputMode" value="direct" onchange="onInputModeChange(${i}, '5', 'direct')"> 직접 입력</label>
+      </div>
+      <div id="perf-${i}-item5-direct-section" style="display:none;">
+        <div class="direct-input-area">
+          <textarea id="perf-${i}-item5-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
+        </div>
+        <div class="direct-input-actions">
+          <button onclick="openSentenceModal(${i}, '5')">📚 문장 선택</button>
+        </div>
       </div>
       <div class="proposal-area">
         <label class="proposal-check">
@@ -1662,7 +1734,22 @@ function restorePerfValues() {
       const radio = document.querySelector(`input[name="perf-${i}-item5"][value="${perf.item5.level}"]`);
       if (radio) { radio.checked = true; onPerfItemChange(i, 'item5', perf.item5.level); }
     }
+    // inputMode 복원
+    ['item2','item3476','item8','item5'].forEach(key => {
+      const mode = perf[key].inputMode || 'library';
+      const modeRadio = document.querySelector(`input[name="perf-${i}-${key}-inputMode"][value="${mode}"]`);
+      if (modeRadio) { modeRadio.checked = true; onInputModeChange(i, key === 'item3476' ? '3476' : key.replace('item',''), mode); }
+    });
   });
+  // item1, item1_1 inputMode 복원
+  if (state.item1.inputMode) {
+    const m = document.querySelector(`input[name="item1-inputMode"][value="${state.item1.inputMode}"]`);
+    if (m) { m.checked = true; onInputModeChange(-1, '1', state.item1.inputMode); }
+  }
+  if (state.item1_1.inputMode) {
+    const m = document.querySelector(`input[name="item1_1-inputMode"][value="${state.item1_1.inputMode}"]`);
+    if (m) { m.checked = true; onInputModeChange(-1, '1_1', state.item1_1.inputMode); }
+  }
 }
 
 function getFallbackLibrary() {
@@ -1679,5 +1766,124 @@ window.addEventListener('DOMContentLoaded', async () => {
   updateProgress();
 });
 </script>
+
+<script>
+// ───────────────────────────────────────────
+// 문장 선택 모달
+// ───────────────────────────────────────────
+let _modalPerfIdx = null;
+let _modalItemKey = null;
+
+function openSentenceModal(perfIdx, itemKey) {
+  _modalPerfIdx = perfIdx;
+  _modalItemKey = itemKey;
+
+  let level, lib, sentences = [];
+
+  if (perfIdx === -1) {
+    // subject-level
+    const subjectItem = state[`item${itemKey}`];
+    level = subjectItem?.level || '';
+    lib = LIBRARY?.items?.[`item${itemKey}`];
+  } else {
+    // performance-level
+    const perf = state.performances[perfIdx];
+    level = perf[itemKey]?.level || '';
+    lib = LIBRARY?.items?.[`item${itemKey}`];
+  }
+
+  if (itemKey === '3476') {
+    if (lib?.sentences?.[level]) {
+      Object.keys(lib.sentences[level]).forEach(subtype => {
+        (lib.sentences[level][subtype] || []).forEach(s => {
+          sentences.push({ text: s.text, blanks: s.blanks || [] });
+        });
+      });
+    }
+  } else if (lib?.sentences) {
+    if (itemKey === '1_1') {
+      // item1_1: all levels
+      Object.keys(lib.sentences).forEach(lv => {
+        (lib.sentences[lv] || []).forEach(s => {
+          sentences.push({ text: s.text, blanks: s.blanks || [] });
+        });
+      });
+    } else if (lib.sentences[level]) {
+      (lib.sentences[level] || []).forEach(s => {
+        sentences.push({ text: s.text, blanks: s.blanks || [] });
+      });
+    }
+  }
+
+  const body = document.getElementById('modalBody');
+  if (sentences.length === 0) {
+    body.innerHTML = '<div class="modal-empty">선택 가능한 문장이 없습니다.</div>';
+  } else {
+    body.innerHTML = sentences.map((s) => {
+      let displayText = s.text;
+      if (s.blanks && s.blanks.length > 0) {
+        s.blanks.forEach(b => { displayText = displayText.replace(`{{${b}}}`, `[${b}]`); });
+      }
+      return `<div class="library-sentence" onclick="selectSentence('${displayText.replace(/'/g, "\\'")}', ${perfIdx}, '${itemKey}')">${displayText}</div>`;
+    }).join('');
+  }
+
+  document.getElementById('sentenceModal').classList.add('show');
+}
+
+function closeSentenceModal() {
+  document.getElementById('sentenceModal').classList.remove('show');
+  _modalPerfIdx = null;
+  _modalItemKey = null;
+}
+
+// 모달 외부 클릭으로 닫기
+document.addEventListener('click', (e) => {
+  const modal = document.getElementById('sentenceModal');
+  if (e.target === modal) closeSentenceModal();
+});
+
+function selectSentence(displayText, perfIdx, itemKey) {
+  const textareaId = perfIdx === -1 ? `item${itemKey}-extra` : `perf-${perfIdx}-item${itemKey}-extra`;
+  const ta = document.getElementById(textareaId);
+  if (ta) {
+    const current = ta.value.trim();
+    ta.value = current ? current + '\n' + displayText : displayText;
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+  closeSentenceModal();
+}
+
+function onInputModeChange(perfIdx, itemKey, mode) {
+  let itemState;
+  if (perfIdx === -1) {
+    itemState = state[`item${itemKey}`];
+  } else {
+    itemState = state.performances[perfIdx][`item${itemKey}`];
+  }
+  itemState.inputMode = mode;
+
+  const stateKey = perfIdx === -1 ? `item${itemKey}` : `item${itemKey}`;
+  const prefix = perfIdx === -1 ? '' : `perf-${perfIdx}-`;
+  const libSection = document.getElementById(`${prefix}${stateKey}-library-section`);
+  const dirSection = document.getElementById(`${prefix}${stateKey}-direct-section`);
+
+  if (libSection) libSection.style.display = mode === 'library' ? '' : 'none';
+  if (dirSection) dirSection.style.display = mode === 'direct' ? '' : 'none';
+  saveData();
+}
+</script>
+
+<!-- 문장 선택 모달 -->
+<div class="modal-overlay" id="sentenceModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3 id="modalTitle">📚 라이브러리 문장 선택</h3>
+      <button class="modal-close" onclick="closeSentenceModal()">&times;</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
 </body>
 </html>
