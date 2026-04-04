@@ -222,10 +222,6 @@
             <option value="4">4개</option>
           </select>
         </div>
-        <div class="form-group">
-          <label>검토 일자</label>
-          <input type="date" id="reviewDate" oninput="saveData()">
-        </div>
       </div>
     </div>
   </div>
@@ -369,7 +365,6 @@ let state = {
   schoolName: '',
   subjectName: '',
   perfCount: 0,
-  reviewDate: '',
   item1: { level: '', extra: '', propose: false, proposalText: '' },
   item1_1: { codes: '', extra: '' },
   performances: []
@@ -381,7 +376,6 @@ function getInitialState() {
     schoolName: '',
     subjectName: '',
     perfCount: 0,
-    reviewDate: '',
     item1: { level: '', extra: '', propose: false, proposalText: '' },
     item1_1: { codes: '', extra: '' },
     performances: []
@@ -392,7 +386,6 @@ function saveData() {
   state.schoolLevel = document.getElementById('schoolLevel').value;
   state.schoolName = document.getElementById('schoolName').value;
   state.subjectName = document.getElementById('subjectName').value;
-  state.reviewDate = document.getElementById('reviewDate').value;
   state.item1.extra = document.getElementById('item1-extra')?.value || '';
   state.item1.proposalText = document.getElementById('item1-proposal-text')?.value || '';
   state.item1_1.codes = document.getElementById('item1_1-codes')?.value || '';
@@ -447,7 +440,6 @@ function loadSavedData() {
     document.getElementById('schoolLevel').value = state.schoolLevel || '';
     document.getElementById('schoolName').value = state.schoolName || '';
     document.getElementById('subjectName').value = state.subjectName || '';
-    document.getElementById('reviewDate').value = state.reviewDate || '';
     if (state.schoolLevel) { onSchoolLevelChange(true); }
     if (state.perfCount) {
       document.getElementById('perfCount').value = state.perfCount;
@@ -1023,7 +1015,6 @@ function generateOutput() {
 function buildOutputLines() {
   const school = state.schoolName || '○○학교';
   const subject = state.subjectName || '해당 과목';
-  const date = state.reviewDate || new Date().toISOString().split('T')[0];
   const lines = [];
 
   lines.push('2026 학생평가 종합점검단');
@@ -1198,8 +1189,6 @@ function buildOutputLines() {
     lines.push('');
   }
 
-  lines.push('─'.repeat(52));
-  lines.push(`검토 일자: ${date}`);
   return lines;
 }
 
@@ -1349,7 +1338,6 @@ function loadBackup() {
         document.getElementById('schoolLevel').value = state.schoolLevel || '';
         document.getElementById('schoolName').value = state.schoolName || '';
         document.getElementById('subjectName').value = state.subjectName || '';
-        document.getElementById('reviewDate').value = state.reviewDate || '';
         // 성취기준 및 수행평가 렌더링
         if (state.schoolLevel) { onSchoolLevelChange(true); }
         if (state.perfCount) {
@@ -1688,7 +1676,6 @@ window.addEventListener('DOMContentLoaded', async () => {
   await loadLibrary();
   loadSavedData();
   loadProposalConfig();
-  document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
   updateProgress();
 });
 </script>
