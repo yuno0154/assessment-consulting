@@ -180,6 +180,13 @@
 
 <div class="container" id="appContainer">
 
+  <!-- 상단 버튼 그룹 -->
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;">
+    <button class="btn btn-secondary" onclick="saveBackup()">💾 임시저장 (.json)</button>
+    <button class="btn btn-secondary" onclick="loadBackup()">📂 불러오기</button>
+    <button class="btn btn-danger" onclick="newSubject()">🆕 새과목</button>
+  </div>
+
   <!-- STEP 1: 기본 정보 -->
   <div class="card">
     <div class="card-header">
@@ -367,6 +374,19 @@ let state = {
   item1_1: { codes: '', extra: '' },
   performances: []
 };
+
+function getInitialState() {
+  return {
+    schoolLevel: '',
+    schoolName: '',
+    subjectName: '',
+    perfCount: 0,
+    reviewDate: '',
+    item1: { level: '', extra: '', propose: false, proposalText: '' },
+    item1_1: { codes: '', extra: '' },
+    performances: []
+  };
+}
 
 function saveData() {
   state.schoolLevel = document.getElementById('schoolLevel').value;
@@ -1302,6 +1322,75 @@ async function submitProposals() {
 }
 
 // ───────────────────────────────────────────
+// 임시저장 / 불러오기 / 새과목
+// ───────────────────────────────────────────
+function saveBackup() {
+  const json = JSON.stringify(state, null, 2);
+  const blob = new Blob([json], {type: 'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${state.schoolName || '학교'}-${state.subjectName || '과목'}.json`;
+  a.click();
+}
+
+function loadBackup() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        Object.assign(state, data);
+        // UI 기본 필드 복원
+        document.getElementById('schoolLevel').value = state.schoolLevel || '';
+        document.getElementById('schoolName').value = state.schoolName || '';
+        document.getElementById('subjectName').value = state.subjectName || '';
+        document.getElementById('reviewDate').value = state.reviewDate || '';
+        // 성취기준 및 수행평가 렌더링
+        if (state.schoolLevel) { onSchoolLevelChange(true); }
+        if (state.perfCount) {
+          document.getElementById('perfCount').value = state.perfCount;
+          onPerfCountChange(true);
+        }
+        updateProgress();
+        localStorage.setItem('consulting-state', JSON.stringify(state));
+        alert('데이터를 불러왔습니다.');
+      } catch (err) {
+        alert('파일을 불러오지 못했습니다. 올바른 JSON 파일인지 확인해 주세요.');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+function newSubject() {
+  if (!confirm('정말로 새 과목을 시작하시겠습니까?\n현재 입력한 데이터는 모두 삭제됩니다.')) return;
+  // 상태 초기화
+  state = getInitialState();
+  localStorage.removeItem('consulting-state');
+  // UI 초기화
+  document.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.type === 'radio') el.checked = false;
+    else if (el.type === 'checkbox') el.checked = false;
+    else el.value = '';
+  });
+  document.getElementById('perfTabs').innerHTML = '';
+  document.getElementById('perfPanels').innerHTML = '';
+  document.getElementById('subjectItemsCard').style.display = 'none';
+  document.getElementById('perfItemsCard').style.display = 'none';
+  document.getElementById('outputCard').style.display = 'none';
+  document.getElementById('proposalCard').style.display = 'none';
+  onSchoolLevelChange();
+  updateProgress();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// ───────────────────────────────────────────
 // 다운로드
 // ───────────────────────────────────────────
 function downloadTxt() {
@@ -1325,7 +1414,6 @@ async function downloadDocx() {
   const { Document, Packer, Paragraph, TextRun, AlignmentType, WidthType, ShadingType, BorderStyle, Table, TableRow, TableCell } = window.docx;
   const school = state.schoolName || '○○학교';
   const subject = state.subjectName || '해당 과목';
-  const date = state.reviewDate || new Date().toISOString().split('T')[0];
 
   // ── 색상 정의
   const C = { navy:'1A3D6B', navyLight:'E8F0F8', ok:'1D6A3A', okLight:'E8F5E9', warn:'7D4A00', warnLight:'FFF3E0', req:'A32D2D', reqLight:'FDECEA', gray:'888888', black:'222222', border:'CCCCCC', white:'FFFFFF', coreYellow:'FFFDE7' };
@@ -1544,14 +1632,11 @@ async function downloadDocx() {
   // 라이브러리 추가 제안
   const proposals = collectProposals();
   if (proposals.length > 0) {
-    children.push(para([run('■ 라이브러리 추가 제안', { bold:true, size:20, color:C.accent })], { spacing:{ before:160, after:60 } }));
+    children.push(para([run('■ 라이브러리 추가 제안', { bold:true, size:20, color:C.navy })], { spacing:{ before:160, after:60 } }));
     proposals.forEach((p, i) => {
       children.push(para([run(`${i+1}. [${p.item}] ${p.text}`, { color:C.black })], { spacing:{ before:20, after:20 } }));
     });
   }
-
-  // 검토 일자
-  children.push(para([run(`검토 일자: ${date}`, { size:18, color:C.gray })], { spacing:{ before:160, after:0 } }));
 
   const doc = new Document({
     sections:[{
