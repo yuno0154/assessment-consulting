@@ -300,18 +300,6 @@
             <input type="text" id="item1_1-codes" placeholder="예) [12국01-03], [12국01-05]" oninput="onItem1_1Change()">
           </div>
           <div class="preview-box" id="item1_1-preview"></div>
-          <div class="input-mode-selector">
-            <label><input type="radio" name="item1_1-inputMode" value="library" onchange="onInputModeChange(-1, '1_1', 'library')"> 라이브러리</label>
-            <label><input type="radio" name="item1_1-inputMode" value="direct" onchange="onInputModeChange(-1, '1_1', 'direct')"> 직접 입력</label>
-          </div>
-          <div id="item1_1-direct-section" style="display:none;">
-            <div class="direct-input-area">
-              <textarea id="item1_1-extra" placeholder="직접 입력하거나 아래 버튼으로 라이브러리 문장을 선택하세요." oninput="saveData()"></textarea>
-            </div>
-            <div class="direct-input-actions">
-              <button onclick="openSentenceModal(-1, '1_1')">📚 문장 선택</button>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -389,7 +377,13 @@ let LIBRARY = null;
 
 async function loadLibrary() {
   try {
+    // file:// 프로토콜에서는 fetch가 CORS 오류를 발생시키므로 바로 fallback 사용
+    if (window.location.protocol === 'file:') {
+      LIBRARY = getFallbackLibrary();
+      return;
+    }
     const res = await fetch('library.json');
+    if (!res.ok) throw new Error('library.json not found');
     LIBRARY = await res.json();
   } catch(e) {
     // 로컬 fallback
@@ -406,7 +400,7 @@ let state = {
   subjectName: '',
   perfCount: 0,
   item1: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
-  item1_1: { codes: '', inputMode: 'library', extra: '' },
+  item1_1: { codes: '' },
   performances: []
 };
 
@@ -417,7 +411,7 @@ function getInitialState() {
     subjectName: '',
     perfCount: 0,
     item1: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
-    item1_1: { codes: '', inputMode: 'library', extra: '' },
+    item1_1: { codes: '' },
     performances: []
   };
 }
@@ -429,9 +423,8 @@ function saveData() {
   state.item1.extra = document.getElementById('item1-extra')?.value || '';
   state.item1.proposalText = document.getElementById('item1-proposal-text')?.value || '';
   state.item1_1.codes = document.getElementById('item1_1-codes')?.value || '';
-  state.item1_1.extra = document.getElementById('item1_1-extra')?.value || '';
 
-  state.performances.forEach((perf, i) => {
+  (state.performances || []).forEach((perf, i) => {
     perf.name = document.getElementById(`perf-${i}-name`)?.value || '';
     // 항목2
     perf.item2.extra = document.getElementById(`perf-${i}-item2-extra`)?.value || '';
@@ -837,6 +830,11 @@ function onItem1Change(level) {
   const box = document.getElementById('item1-preview');
   box.textContent = text;
   box.className = 'preview-box show ' + (level === '적절' ? 'ok' : 'req');
+  // 라이브러리 모드면 extra에 자동 저장
+  if (state.item1.inputMode === 'library') {
+    state.item1.extra = text;
+    document.getElementById('item1-extra').value = text;
+  }
   saveData();
 }
 
@@ -885,6 +883,25 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     box.textContent = '';
     box.className = 'preview-box';
   }
+
+  // 라이브러리 모드: item2, item8, item5는 extra에 자동 저장
+  const perf = state.performances[perfIdx];
+  if (perf[itemKey].inputMode === 'library' && itemKey !== 'item3476') {
+    const lib = LIBRARY?.items?.[itemKey];
+    const sent = lib?.sentences?.[level]?.[0];
+    if (sent) {
+      let text = sent.text;
+      if (sent.blanks) {
+        sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
+      }
+      // 수행평가명 치환
+      const perfName = perf.name || `수행평가 ${perfIdx + 1}`;
+      text = text.replace(/{{수행평가명}}/g, perfName);
+      perf[itemKey].extra = text;
+      document.getElementById(`perf-${perfIdx}-${itemKey}-extra`).value = text;
+    }
+  }
+
   saveData();
 }
 
@@ -1046,7 +1063,7 @@ function updateProgress() {
   let done = 0;
   if (state.item1.level) done++;
   if (state.schoolLevel === 'middle' || document.getElementById('item1_1-codes')?.value !== undefined) done++;
-  state.performances.forEach(p => {
+  (state.performances || []).forEach(p => {
     if (p.item2.level) done++;
     if (p.item3476.level) done++;
     if (p.item8.level) done++;
@@ -1107,7 +1124,7 @@ function buildOutputLines() {
     { label:'항목 8   암기형·과제형·AI  ', getLevel:(p) => p.item8.level },
     { label:'항목 5   미응시 기본점수   ', getLevel:(p) => p.item5.level },
   ];
-  state.performances.forEach((p, i) => lines.push(`  [수행평가 ${i+1}] ${p.name || `수행평가 ${i+1}`}`));
+  (state.performances || []).forEach((p, i) => lines.push(`  [수행평가 ${i+1}] ${p.name || `수행평가 ${i+1}`}`));
   lines.push('');
   summaryDefs.forEach(def => {
     const levels = state.performances.map(p => def.getLevel(p) || '—');
@@ -1123,10 +1140,7 @@ function buildOutputLines() {
   lines.push('▶ 항목 1  교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인');
   if (state.item1.level) {
     lines.push(`   판정: ${state.item1.level}`);
-    const lib1 = LIBRARY?.items?.item1;
-    const t1 = lib1?.sentences?.[state.item1.level]?.[0]?.text || '';
-    if (t1) lines.push(`   → ${t1}`);
-    if (state.item1.extra) lines.push(`   [추가 의견] ${state.item1.extra}`);
+    if (state.item1.extra) lines.push(`   → ${state.item1.extra}`);
   }
   lines.push('');
 
@@ -1143,12 +1157,11 @@ function buildOutputLines() {
       lines.push('   판정: 적절');
       lines.push('   → 학기의 모든 성취기준이 평가계획에 반영되어 있습니다.');
     }
-    if (state.item1_1.extra) lines.push(`   [추가 의견] ${state.item1_1.extra}`);
     lines.push('');
   }
 
   // 수행평가별
-  state.performances.forEach((perf, i) => {
+  (state.performances || []).forEach((perf, i) => {
     const perfName = perf.name || `수행평가 ${i + 1}`;
     const eun = j은는(perfName);
     lines.push('─'.repeat(52));
@@ -1159,10 +1172,7 @@ function buildOutputLines() {
     lines.push('▶ 항목 2  수행평가명에 평가 요소와 평가 방법 포함 여부 확인');
     if (perf.item2.level) {
       lines.push(`   판정: ${perf.item2.level}`);
-      const lib2 = LIBRARY?.items?.item2;
-      const sent2 = lib2?.sentences?.[perf.item2.level]?.[0];
-      if (sent2) lines.push(`   → ${sent2.text.replace('{{수행평가명}}', perfName)}`);
-      if (perf.item2.extra) lines.push(`   [추가 의견] ${perf.item2.extra}`);
+      if (perf.item2.extra) lines.push(`   → ${perf.item2.extra}`);
     }
     lines.push('');
 
@@ -1175,7 +1185,7 @@ function buildOutputLines() {
         if (t3ok) lines.push(`   → ${t3ok}`);
       } else if (perf.item3476.selectedSubtypes?.length) {
         const lib3 = LIBRARY?.items?.item3_4_7_6;
-        perf.item3476.selectedSubtypes.forEach(subtype => {
+        perf.item3476.selectedSubtypes?.forEach(subtype => {
           const sents3 = lib3?.sentences?.[perf.item3476.level]?.[subtype] || [];
           sents3.forEach(s => {
             let text = s.text;
@@ -1195,28 +1205,29 @@ function buildOutputLines() {
     lines.push('▶ 항목 8  암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인');
     if (perf.item8.level) {
       lines.push(`   판정: ${perf.item8.level}`);
-      if (perf.item8.level === '적절') {
-        const t8ok = LIBRARY?.items?.item8?.sentences?.['적절']?.[0]?.text || '';
-        if (t8ok) lines.push(`   → ${t8ok}`);
-      } else if (perf.item8.selectedSubtypes?.length) {
-        const lib8 = LIBRARY?.items?.item8;
-        perf.item8.selectedSubtypes.forEach(subtype => {
-          const sents8 = lib8?.sentences?.['보완 요청']?.[subtype] || [];
-          sents8.forEach(s => {
-            let text = s.text;
-            if (s.blanks) s.blanks.forEach(b => {
-              text = text.replace(`{{${b}}}`, perf.item8.blanks?.[`${subtype}_${b}`] || `[${b}]`);
-            });
-            const parts = text.split('\n');
-            parts.forEach((part, idx) => {
-              if (!part.trim()) return;
-              const fixed = part.replace(`${perfName}은 `, `${perfName}${eun} `);
-              lines.push(idx === 0 ? `   → ${fixed}` : `   ※ ${fixed}`);
+      if (perf.item8.inputMode === 'library') {
+        if (perf.item8.level === '적절') {
+          const t8ok = LIBRARY?.items?.item8?.sentences?.['적절']?.[0]?.text || '';
+          if (t8ok) lines.push(`   → ${t8ok}`);
+        } else if (perf.item8.selectedSubtypes?.length) {
+          const lib8 = LIBRARY?.items?.item8;
+          perf.item8.selectedSubtypes?.forEach(subtype => {
+            const sents8 = lib8?.sentences?.['보완 요청']?.[subtype] || [];
+            sents8.forEach(s => {
+              let text = s.text;
+              if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item8.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+              const parts = text.split('\n');
+              parts.forEach((part, idx) => {
+                if (!part.trim()) return;
+                const fixed = part.replace(`${perfName}은 `, `${perfName}${eun} `);
+                lines.push(idx === 0 ? `   → ${fixed}` : `   ※ ${fixed}`);
+              });
             });
           });
-        });
+        }
+      } else if (perf.item8.extra) {
+        lines.push(`   → ${perf.item8.extra}`);
       }
-      if (perf.item8.extra) lines.push(`   [추가 의견] ${perf.item8.extra}`);
     }
     lines.push('');
 
@@ -1224,23 +1235,24 @@ function buildOutputLines() {
     lines.push('▶ 항목 5  수행평가 미응시 학생에 대한 기본점수 부여 여부 확인');
     if (perf.item5.level) {
       lines.push(`   판정: ${perf.item5.level}`);
-      if (perf.item5.level === '적절') {
-        const t5ok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
-        if (t5ok) lines.push(`   → ${t5ok}`);
-      } else if (perf.item5.selectedSubtypes?.length) {
-        const lib5 = LIBRARY?.items?.item5;
-        perf.item5.selectedSubtypes.forEach(subtype => {
-          const sents5 = lib5?.sentences?.['보완 요청']?.[subtype] || [];
-          sents5.forEach(s => {
-            let text = s.text;
-            if (s.blanks) s.blanks.forEach(b => {
-              text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`);
+      if (perf.item5.inputMode === 'library') {
+        if (perf.item5.level === '적절') {
+          const t5ok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
+          if (t5ok) lines.push(`   → ${t5ok}`);
+        } else if (perf.item5.selectedSubtypes?.length) {
+          const lib5 = LIBRARY?.items?.item5;
+          perf.item5.selectedSubtypes?.forEach(subtype => {
+            const sents5 = lib5?.sentences?.['보완 요청']?.[subtype] || [];
+            sents5.forEach(s => {
+              let text = s.text;
+              if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+              lines.push(`   → ${text}`);
             });
-            lines.push(`   → ${text}`);
           });
-        });
+        }
+      } else if (perf.item5.extra) {
+        lines.push(`   → ${perf.item5.extra}`);
       }
-      if (perf.item5.extra) lines.push(`   [추가 의견] ${perf.item5.extra}`);
     }
     lines.push('');
 
@@ -1274,7 +1286,7 @@ function collectProposals() {
     }
   };
   check('item1-propose', 'item1-proposal-text', '항목 1');
-  state.performances.forEach((_, i) => {
+  (state.performances || []).forEach((_, i) => {
     check(`perf-${i}-item2-propose`, `perf-${i}-item2-proposal-text`, `항목 2 (수행평가 ${i+1})`);
     check(`perf-${i}-item3476-propose`, `perf-${i}-item3476-proposal-text`, `성취평가 정합성 (수행평가 ${i+1})`);
     check(`perf-${i}-item8-propose`, `perf-${i}-item8-proposal-text`, `항목 8 (수행평가 ${i+1})`);
@@ -1563,11 +1575,7 @@ async function downloadDocx() {
   if (state.item1.level) {
     children.push(para([run('▶ 항목 1 | 교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인', { bold:true, color:C.navy })], { spacing:{ before:100, after:30 } }));
     children.push(para([run(`판정: ${state.item1.level}`, { bold:true, color:levelColor(state.item1.level) })], { indent:{ left:200 }, spacing:{ before:20, after:20 } }));
-    if (state.item1.level !== '적절') {
-      const text = LIBRARY?.items?.item1?.sentences?.['보완 요청']?.[0]?.text || '';
-      if (text) children.push(para([run('→ ' + text, { color:C.req })], { indent:{ left:200 }, spacing:{ before:20, after:20 } }));
-    }
-    if (state.item1.extra) children.push(para([run('[추가 의견] ' + state.item1.extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+    if (state.item1.extra) children.push(para([run('→ ' + state.item1.extra, { color:C.req })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
   }
 
   // 항목 1-1 (고교)
@@ -1581,11 +1589,10 @@ async function downloadDocx() {
     } else {
       children.push(para([run('판정: 적절', { bold:true, color:C.ok })], { indent:{ left:200 } }));
     }
-    if (state.item1_1.extra) children.push(para([run('[추가 의견] ' + state.item1_1.extra, { color:C.gray })], { indent:{ left:200 } }));
   }
 
   // 수행평가별
-  state.performances.forEach((perf, i) => {
+  (state.performances || []).forEach((perf, i) => {
     const perfName = perf.name || `수행평가 ${i+1}`;
 
     // 수행평가 구분 헤더
@@ -1607,19 +1614,14 @@ async function downloadDocx() {
       if (extra) children.push(para([run('[추가 의견] ' + extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
     };
 
-    // 항목 2
-    const item2Texts = [];
-    if (perf.item2.level && perf.item2.level !== '적절') {
-      const sent = LIBRARY?.items?.item2?.sentences?.[perf.item2.level]?.[0];
-      if (sent) item2Texts.push(sent.text.replace('{{수행평가명}}', perfName));
-    }
-    addItem('▶ 항목 2 | 수행평가명에 평가 요소와 평가 방법 포함 여부 확인', perf.item2.level, item2Texts, perf.item2.extra);
+    // 항목 2 (extra만 사용 - 라이브러리/직접입력 mode에 따라 이미 채워짐)
+    addItem('▶ 항목 2 | 수행평가명에 평가 요소와 평가 방법 포함 여부 확인', perf.item2.level, [], perf.item2.extra);
 
     // 항목 3+4+7+6
     const item3476Texts = [];
     if (perf.item3476.level && perf.item3476.level !== '적절' && perf.item3476.selectedSubtypes?.length) {
       const lib = LIBRARY?.items?.item3_4_7_6;
-      perf.item3476.selectedSubtypes.forEach(subtype => {
+      perf.item3476.selectedSubtypes?.forEach(subtype => {
         const sentences = lib?.sentences?.[perf.item3476.level]?.[subtype] || [];
         sentences.forEach(s => {
           let text = s.text;
@@ -1634,7 +1636,7 @@ async function downloadDocx() {
     const item8Texts = [];
     if (perf.item8.level && perf.item8.level !== '적절' && perf.item8.selectedSubtypes?.length) {
       const lib = LIBRARY?.items?.item8;
-      perf.item8.selectedSubtypes.forEach(subtype => {
+      perf.item8.selectedSubtypes?.forEach(subtype => {
         const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
         sentences.forEach(s => {
           let text = s.text;
@@ -1644,43 +1646,53 @@ async function downloadDocx() {
       });
     }
 
-    // 항목 8 전용 출력 — emphasis 문장 빨간색 굵게 처리
+    // 항목 8 — 라이브러리 모드: library texts / 직접 입력 모드: extra
     if (perf.item8.level) {
       const title = '▶ 항목 8 | 암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인';
       children.push(para([run(title, { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
       children.push(para([run(`판정: ${perf.item8.level}`, { bold:true, color:levelColor(perf.item8.level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
-      item8Texts.forEach(t => {
-        const parts = t.text.split('\n');
-        parts.forEach((part, idx) => {
-          if (!part.trim()) return;
-          // 마무리 문구(두 번째 단락)이고 emphasis가 true이면 빨간색 굵게
-          const isEmphasisLine = t.emphasis && idx > 0;
-          children.push(para(
-            [run((idx === 0 ? '→ ' : '') + part, {
-              color: isEmphasisLine ? C.req : C.req,
-              bold: isEmphasisLine,
-            })],
-            { indent:{ left:200 }, spacing:{ before: isEmphasisLine ? 60 : 10, after:10 } }
-          ));
+      if (perf.item8.inputMode === 'library' && item8Texts.length > 0) {
+        item8Texts.forEach(t => {
+          const parts = t.text.split('\n');
+          parts.forEach((part, idx) => {
+            if (!part.trim()) return;
+            const isEmphasisLine = t.emphasis && idx > 0;
+            children.push(para(
+              [run((idx === 0 ? '→ ' : '') + part, { color: isEmphasisLine ? C.req : C.req, bold: isEmphasisLine })],
+              { indent:{ left:200 }, spacing:{ before: isEmphasisLine ? 60 : 10, after:10 } }
+            ));
+          });
         });
-      });
-      if (perf.item8.extra) children.push(para([run('[추가 의견] ' + perf.item8.extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+      } else if (perf.item8.extra) {
+        children.push(para([run('→ ' + perf.item8.extra, { color: C.req })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+      }
     }
 
-    // 항목 5
-    const item5Texts = [];
-    if (perf.item5.level && perf.item5.level !== '적절' && perf.item5.selectedSubtypes?.length) {
-      const lib = LIBRARY?.items?.item5;
-      perf.item5.selectedSubtypes.forEach(subtype => {
-        const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
-        sentences.forEach(s => {
-          let text = s.text;
-          if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
-          item5Texts.push(text);
+    // 항목 5 — 라이브러리 모드: library texts / 직접 입력 모드: extra
+    if (perf.item5.level) {
+      const item5Texts = [];
+      if (perf.item5.level !== '적절' && perf.item5.selectedSubtypes?.length) {
+        const lib = LIBRARY?.items?.item5;
+        perf.item5.selectedSubtypes?.forEach(subtype => {
+          const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
+          sentences.forEach(s => {
+            let text = s.text;
+            if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+            item5Texts.push(text);
+          });
         });
-      });
+      }
+      const title = '▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인';
+      children.push(para([run(title, { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
+      children.push(para([run(`판정: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
+      if (perf.item5.inputMode === 'library' && item5Texts.length > 0) {
+        item5Texts.forEach(t => {
+          children.push(para([run('→ ' + t, { color: C.req })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
+        });
+      } else if (perf.item5.extra) {
+        children.push(para([run('→ ' + perf.item5.extra, { color: C.req })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+      }
     }
-    addItem('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', perf.item5.level, item5Texts, perf.item5.extra);
 
     // 기타 의견
     if (perf.etc) {
@@ -1717,7 +1729,7 @@ async function downloadDocx() {
 // 저장 값 복원
 // ───────────────────────────────────────────
 function restorePerfValues() {
-  state.performances.forEach((perf, i) => {
+  (state.performances || []).forEach((perf, i) => {
     if (perf.item2.level) {
       const radio = document.querySelector(`input[name="perf-${i}-item2"][value="${perf.item2.level}"]`);
       if (radio) { radio.checked = true; onPerfItemChange(i, 'item2', perf.item2.level); }
@@ -1741,14 +1753,10 @@ function restorePerfValues() {
       if (modeRadio) { modeRadio.checked = true; onInputModeChange(i, key === 'item3476' ? '3476' : key.replace('item',''), mode); }
     });
   });
-  // item1, item1_1 inputMode 복원
+  // item1 inputMode 복원
   if (state.item1.inputMode) {
     const m = document.querySelector(`input[name="item1-inputMode"][value="${state.item1.inputMode}"]`);
     if (m) { m.checked = true; onInputModeChange(-1, '1', state.item1.inputMode); }
-  }
-  if (state.item1_1.inputMode) {
-    const m = document.querySelector(`input[name="item1_1-inputMode"][value="${state.item1_1.inputMode}"]`);
-    if (m) { m.checked = true; onInputModeChange(-1, '1_1', state.item1_1.inputMode); }
   }
 }
 
@@ -1787,8 +1795,8 @@ function openSentenceModal(perfIdx, itemKey) {
     lib = LIBRARY?.items?.[`item${itemKey}`];
   } else {
     // performance-level
-    const perf = state.performances[perfIdx];
-    level = perf[itemKey]?.level || '';
+    const perf = state.performances ? state.performances[perfIdx] : null;
+    level = perf ? perf[itemKey]?.level || '' : '';
     lib = LIBRARY?.items?.[`item${itemKey}`];
   }
 
@@ -1859,8 +1867,10 @@ function onInputModeChange(perfIdx, itemKey, mode) {
   if (perfIdx === -1) {
     itemState = state[`item${itemKey}`];
   } else {
-    itemState = state.performances[perfIdx][`item${itemKey}`];
+    const perf = state.performances ? state.performances[perfIdx] : null;
+    itemState = perf ? perf[`item${itemKey}`] : null;
   }
+  if (!itemState) return;
   itemState.inputMode = mode;
 
   const stateKey = perfIdx === -1 ? `item${itemKey}` : `item${itemKey}`;
