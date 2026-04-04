@@ -1310,7 +1310,7 @@ function downloadTxt() {
   const blob = new Blob(['\uFEFF' + text], {type: 'text/plain;charset=utf-8'});
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `평가계획서검토의견_${state.schoolName||'학교'}_${state.subjectName||'과목'}.txt`;
+  a.download = `${state.schoolName || '학교'}-${state.subjectName || '과목'}.txt`;
   a.click();
 }
 
@@ -1564,7 +1564,7 @@ async function downloadDocx() {
   const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
-  a.download = `평가계획서검토의견_${school}_${subject}.docx`;
+  a.download = `${school}-${subject}.docx`;
   a.click();
 }
 
