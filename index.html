@@ -306,6 +306,35 @@
     </div>
   </div>
 
+  <!-- STEP 5: 라이브러리 제안 제출 -->
+  <div class="card" id="proposalCard" style="display:none">
+    <div class="card-header">
+      <div class="step-num">5</div>
+      라이브러리 추가 제안 제출
+    </div>
+    <div class="card-body">
+      <div class="notice">📌 체크하신 라이브러리 추가 제안을 관리자에게 전송합니다. GitHub 연결 정보를 입력해 주세요.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>GitHub 사용자명 (관리자 계정)</label>
+          <input type="text" id="proposalGithubUser" placeholder="예) yuno0154" oninput="saveProposalConfig()">
+        </div>
+        <div class="form-group">
+          <label>Repository 이름</label>
+          <input type="text" id="proposalGithubRepo" placeholder="예) assessment-consulting" oninput="saveProposalConfig()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>GitHub Token <span style="font-size:10px;color:var(--gray);font-weight:400;">(관리자가 공유한 토큰 또는 본인 토큰)</span></label>
+        <input type="password" id="proposalGithubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveProposalConfig()">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="submitProposals()">제안 전송 ↗</button>
+      </div>
+      <div id="proposalStatus" style="display:none;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12px;"></div>
+    </div>
+  </div>
+
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/docx/9.0.2/docx.umd.min.js"></script>
@@ -967,6 +996,8 @@ function generateOutput() {
   document.getElementById('outputText').textContent = text;
   document.getElementById('outputPreview').style.display = 'block';
   document.getElementById('outputPreview').scrollIntoView({behavior: 'smooth'});
+  // 제안이 있으면 제출 카드 표시
+  showProposalCard();
 }
 
 function buildOutputLines() {
@@ -1164,11 +1195,110 @@ function collectProposals() {
   check('item1-propose', 'item1-proposal-text', '항목 1');
   state.performances.forEach((_, i) => {
     check(`perf-${i}-item2-propose`, `perf-${i}-item2-proposal-text`, `항목 2 (수행평가 ${i+1})`);
-    check(`perf-${i}-item3476-propose`, `perf-${i}-item3476-proposal-text`, `항목 3+4+7+6 (수행평가 ${i+1})`);
+    check(`perf-${i}-item3476-propose`, `perf-${i}-item3476-proposal-text`, `성취평가 정합성 (수행평가 ${i+1})`);
     check(`perf-${i}-item8-propose`, `perf-${i}-item8-proposal-text`, `항목 8 (수행평가 ${i+1})`);
     check(`perf-${i}-item5-propose`, `perf-${i}-item5-proposal-text`, `항목 5 (수행평가 ${i+1})`);
   });
   return proposals;
+}
+
+// ───────────────────────────────────────────
+// 라이브러리 제안 제출 (GitHub Issues)
+// ───────────────────────────────────────────
+function saveProposalConfig() {
+  const cfg = {
+    user: document.getElementById('proposalGithubUser').value,
+    repo: document.getElementById('proposalGithubRepo').value,
+  };
+  localStorage.setItem('proposal-config', JSON.stringify(cfg));
+}
+
+function loadProposalConfig() {
+  const saved = localStorage.getItem('proposal-config');
+  if (saved) {
+    try {
+      const c = JSON.parse(saved);
+      document.getElementById('proposalGithubUser').value = c.user || '';
+      document.getElementById('proposalGithubRepo').value = c.repo || '';
+    } catch(e) {}
+  }
+}
+
+function showProposalCard() {
+  const proposals = collectProposals();
+  const card = document.getElementById('proposalCard');
+  if (proposals.length > 0) {
+    card.style.display = 'block';
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } else {
+    card.style.display = 'none';
+  }
+}
+
+async function submitProposals() {
+  const proposals = collectProposals();
+  if (proposals.length === 0) { alert('제안된 내용이 없습니다.'); return; }
+
+  const user = document.getElementById('proposalGithubUser').value.trim();
+  const repo = document.getElementById('proposalGithubRepo').value.trim();
+  const token = document.getElementById('proposalGithubToken').value.trim();
+  const statusDiv = document.getElementById('proposalStatus');
+
+  if (!user || !repo || !token) {
+    statusDiv.style.display = 'block';
+    statusDiv.style.background = '#fdecea';
+    statusDiv.style.color = '#a32d2d';
+    statusDiv.textContent = 'GitHub 사용자명, Repository, Token을 모두 입력해 주세요.';
+    return;
+  }
+
+  const school = state.schoolName || '○○학교';
+  const subject = state.subjectName || '해당 과목';
+  const date = state.reviewDate || new Date().toISOString().split('T')[0];
+
+  let successCount = 0;
+  let failCount = 0;
+
+  statusDiv.style.display = 'block';
+  statusDiv.style.background = '#e8f0f8';
+  statusDiv.style.color = '#1a3d6b';
+  statusDiv.textContent = `${proposals.length}개 제안을 전송 중입니다...`;
+
+  for (const proposal of proposals) {
+    const title = `[라이브러리 제안] ${proposal.item} — ${school} ${subject}`;
+    const body = `## 라이브러리 추가 제안\n\n**항목**: ${proposal.item}\n**학교**: ${school}\n**과목**: ${subject}\n**검토일**: ${date}\n\n### 제안 문장\n\n${proposal.text}\n\n---\n*이 이슈는 평가계획서 서면 컨설팅 시스템에서 자동 생성되었습니다.*`;
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${user}/${repo}/issues`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, body, labels: ['라이브러리 제안'] })
+      });
+      if (res.ok) successCount++;
+      else failCount++;
+    } catch(e) {
+      failCount++;
+    }
+  }
+
+  if (successCount > 0 && failCount === 0) {
+    statusDiv.style.background = '#e8f5e9';
+    statusDiv.style.color = '#1d6a3a';
+    statusDiv.textContent = `✅ ${successCount}개 제안이 관리자에게 전송되었습니다.`;
+    // 제안 체크박스 초기화
+    document.querySelectorAll('input[id$="-propose"]').forEach(cb => {
+      cb.checked = false;
+      toggleProposal(cb.id.replace('-propose', ''));
+    });
+  } else if (failCount > 0) {
+    statusDiv.style.background = '#fdecea';
+    statusDiv.style.color = '#a32d2d';
+    statusDiv.textContent = `성공 ${successCount}개 / 실패 ${failCount}개. Token 또는 Repository 이름을 확인해 주세요.`;
+  }
 }
 
 // ───────────────────────────────────────────
@@ -1472,6 +1602,7 @@ function getFallbackLibrary() {
 window.addEventListener('DOMContentLoaded', async () => {
   await loadLibrary();
   loadSavedData();
+  loadProposalConfig();
   document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
   updateProgress();
 });
