@@ -1,0 +1,1480 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>평가계획서 서면 컨설팅 시스템</title>
+<style>
+  :root {
+    --navy: #1a3d6b;
+    --navy-light: #e8f0f8;
+    --accent: #c0392b;
+    --ok: #1d6a3a;
+    --ok-light: #e8f5e9;
+    --warn: #7d4a00;
+    --warn-light: #fff3e0;
+    --req: #a32d2d;
+    --req-light: #fdecea;
+    --gray: #5f5e5a;
+    --gray-light: #f5f5f5;
+    --border: #ddd;
+    --white: #fff;
+    --core-yellow: #fffde7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Malgun Gothic', '맑은 고딕', sans-serif; font-size: 14px; background: #f0f2f5; color: #222; }
+
+  /* 헤더 */
+  .app-header { background: var(--navy); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+  .app-header h1 { font-size: 15px; font-weight: 600; }
+  .app-header .subtitle { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .progress-wrap { display: flex; align-items: center; gap: 8px; }
+  .progress-bar { width: 120px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: #4caf50; border-radius: 3px; transition: width 0.3s; }
+  .progress-text { font-size: 11px; opacity: 0.9; }
+
+  /* 컨테이너 */
+  .container { max-width: 860px; margin: 0 auto; padding: 16px; }
+
+  /* 카드 */
+  .card { background: var(--white); border-radius: 8px; border: 1px solid var(--border); margin-bottom: 12px; overflow: hidden; }
+  .card-header { background: var(--navy); color: white; padding: 10px 16px; font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .card-header .step-num { background: rgba(255,255,255,0.2); border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-size: 11px; flex-shrink: 0; }
+  .card-body { padding: 16px; }
+
+  /* 폼 요소 */
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: 4px; }
+  .form-group label { font-size: 12px; color: var(--gray); font-weight: 600; }
+  .form-group input, .form-group select, .form-group textarea {
+    border: 1px solid var(--border); border-radius: 4px; padding: 7px 10px; font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.15s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--navy); }
+  .form-group textarea { resize: vertical; min-height: 60px; line-height: 1.5; }
+
+  /* 판정 영역 */
+  .item-section { border: 1px solid var(--border); border-radius: 6px; margin-bottom: 12px; overflow: hidden; }
+  .item-title { background: var(--gray-light); padding: 8px 14px; font-size: 12px; font-weight: 600; color: var(--navy); display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); }
+  .item-title .core-badge { background: var(--accent); color: white; font-size: 10px; padding: 1px 6px; border-radius: 10px; }
+  .item-body { padding: 12px 14px; }
+
+  /* 라디오 버튼 그룹 */
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .radio-btn { cursor: pointer; }
+  .radio-btn input { display: none; }
+  .radio-btn span {
+    display: inline-block; padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border);
+    font-size: 12px; color: var(--gray); transition: all 0.15s; user-select: none;
+  }
+  .radio-btn input:checked + span.ok { background: var(--ok-light); color: var(--ok); border-color: var(--ok); font-weight: 600; }
+  .radio-btn input:checked + span.warn { background: var(--warn-light); color: var(--warn); border-color: var(--warn); font-weight: 600; }
+  .radio-btn input:checked + span.req { background: var(--req-light); color: var(--req); border-color: var(--req); font-weight: 600; }
+  .radio-btn:hover span { border-color: var(--navy); }
+
+  /* 체크박스 그룹 */
+  .check-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; }
+  .check-item { display: flex; align-items: flex-start; gap: 8px; cursor: pointer; }
+  .check-item input[type=checkbox] { margin-top: 2px; flex-shrink: 0; accent-color: var(--navy); }
+  .check-item span { font-size: 12px; color: #444; line-height: 1.5; }
+
+  /* 컨설팅 문장 미리보기 */
+  .preview-box {
+    background: var(--navy-light); border-left: 3px solid var(--navy);
+    border-radius: 0 4px 4px 0; padding: 10px 12px; margin: 8px 0;
+    font-size: 12px; line-height: 1.7; color: #333; display: none;
+  }
+  .preview-box.show { display: block; }
+  .preview-box.ok { background: var(--ok-light); border-color: var(--ok); }
+  .preview-box.warn { background: var(--warn-light); border-color: var(--warn); }
+  .preview-box.req { background: var(--req-light); border-color: var(--req); }
+
+  /* 빈칸 입력 */
+  .blank-group { background: #fffde7; border: 1px solid #f9a825; border-radius: 4px; padding: 10px 12px; margin: 6px 0; }
+  .blank-group label { font-size: 11px; color: #7d4a00; font-weight: 600; display: block; margin-bottom: 4px; }
+  .blank-group input, .blank-group textarea {
+    width: 100%; border: 1px solid #f9a825; border-radius: 3px; padding: 5px 8px;
+    font-size: 12px; font-family: inherit; background: white; outline: none;
+  }
+  .blank-group input:focus, .blank-group textarea:focus { border-color: var(--navy); }
+
+  /* 추가의견 */
+  .extra-opinion { margin-top: 8px; }
+  .extra-opinion label { font-size: 11px; color: var(--gray); display: block; margin-bottom: 4px; }
+  .extra-opinion textarea { width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 50px; outline: none; }
+  .extra-opinion textarea:focus { border-color: var(--navy); }
+
+  /* 라이브러리 제안 */
+  .proposal-area { margin-top: 6px; }
+  .proposal-check { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  .proposal-check input { accent-color: var(--accent); }
+  .proposal-check span { font-size: 11px; color: var(--accent); }
+  .proposal-input { margin-top: 6px; display: none; }
+  .proposal-input.show { display: block; }
+  .proposal-input textarea { width: 100%; border: 1px solid var(--accent); border-radius: 4px; padding: 6px 8px; font-size: 12px; font-family: inherit; resize: vertical; min-height: 50px; outline: none; background: #fff5f5; }
+
+  /* 수행평가 탭 */
+  .perf-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+  .perf-tab {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+    font-size: 12px; cursor: pointer; background: white; color: var(--gray);
+    transition: all 0.15s; font-family: inherit;
+  }
+  .perf-tab.active { background: var(--navy); color: white; border-color: var(--navy); }
+  .perf-panel { display: none; }
+  .perf-panel.active { display: block; }
+  .perf-name-row { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .perf-name-row label { font-size: 12px; color: var(--gray); font-weight: 600; white-space: nowrap; }
+  .perf-name-row input { flex: 1; border: 1px solid var(--border); border-radius: 4px; padding: 6px 10px; font-size: 13px; font-family: inherit; outline: none; }
+  .perf-name-row input:focus { border-color: var(--navy); }
+
+  /* 버튼 */
+  .btn { padding: 10px 20px; border-radius: 6px; border: none; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; transition: all 0.15s; }
+  .btn-primary { background: var(--navy); color: white; }
+  .btn-primary:hover { background: #122d50; }
+  .btn-ok { background: var(--ok); color: white; }
+  .btn-ok:hover { opacity: 0.9; }
+  .btn-secondary { background: white; color: var(--navy); border: 1px solid var(--navy); }
+  .btn-secondary:hover { background: var(--navy-light); }
+  .btn-danger { background: var(--accent); color: white; }
+  .btn-danger:hover { opacity: 0.9; }
+  .btn-group { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+
+  /* 고교 표시 */
+  .high-only { display: none; }
+  .high-school .high-only { display: block; }
+
+  /* 구분선 */
+  .divider { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+
+  /* 알림 */
+  .notice { background: var(--core-yellow); border: 1px solid #f9a825; border-radius: 4px; padding: 8px 12px; font-size: 12px; color: #7d4a00; margin-bottom: 12px; }
+
+  /* 완료 상태 표시 */
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #ddd; display: inline-block; margin-right: 4px; }
+  .status-dot.done { background: var(--ok); }
+  .status-dot.issue { background: var(--req); }
+
+  /* 반응형 */
+  @media (max-width: 600px) {
+    .form-row { grid-template-columns: 1fr; }
+    .form-row.three { grid-template-columns: 1fr; }
+  }
+
+  /* 인쇄 숨김 */
+  @media print { .app-header, .btn-group, .perf-tabs { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div>
+    <div class="app-header h1" style="font-size:15px;font-weight:600;">2026 평가계획서 서면 컨설팅 시스템</div>
+    <div class="subtitle">중등 학생평가 종합 점검단</div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">0% 완료</div>
+  </div>
+</div>
+
+<div class="container" id="appContainer">
+
+  <!-- STEP 1: 기본 정보 -->
+  <div class="card">
+    <div class="card-header">
+      <div class="step-num">1</div>
+      기본 정보 입력
+    </div>
+    <div class="card-body">
+      <div class="form-row three">
+        <div class="form-group">
+          <label>학교급</label>
+          <select id="schoolLevel" onchange="onSchoolLevelChange()">
+            <option value="">선택</option>
+            <option value="middle">중학교</option>
+            <option value="high">고등학교</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>학교명</label>
+          <input type="text" id="schoolName" placeholder="예) ○○중학교" oninput="saveData()">
+        </div>
+        <div class="form-group">
+          <label>과목명</label>
+          <input type="text" id="subjectName" placeholder="예) 공통국어1" oninput="saveData()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>수행평가 개수</label>
+          <select id="perfCount" onchange="onPerfCountChange()">
+            <option value="">선택</option>
+            <option value="2">2개</option>
+            <option value="3">3개</option>
+            <option value="4">4개</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>검토 일자</label>
+          <input type="date" id="reviewDate" oninput="saveData()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 2: 과목 단위 항목 -->
+  <div class="card" id="subjectItemsCard" style="display:none">
+    <div class="card-header">
+      <div class="step-num">2</div>
+      과목 단위 점검 항목
+    </div>
+    <div class="card-body">
+
+      <!-- 항목 1 -->
+      <div class="item-section">
+        <div class="item-title">항목 1 &nbsp;|&nbsp; 교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인</div>
+        <div class="item-body">
+          <div class="radio-group" id="item1-radios">
+            <label class="radio-btn"><input type="radio" name="item1" value="적절" onchange="onItem1Change('적절')"><span class="ok">적절</span></label>
+            <label class="radio-btn"><input type="radio" name="item1" value="보완 요청" onchange="onItem1Change('보완 요청')"><span class="req">보완 요청</span></label>
+          </div>
+          <div class="preview-box" id="item1-preview"></div>
+          <div class="extra-opinion">
+            <label>추가 의견 (선택)</label>
+            <textarea id="item1-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+          </div>
+          <div class="proposal-area">
+            <label class="proposal-check">
+              <input type="checkbox" id="item1-propose" onchange="toggleProposal('item1')">
+              <span>📌 라이브러리에 추가 제안</span>
+            </label>
+            <div class="proposal-input" id="item1-proposal-input">
+              <textarea placeholder="제안할 표준 문장을 입력하세요." id="item1-proposal-text" oninput="saveData()"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 항목 1-1 (고교만) -->
+      <div class="item-section high-only" id="item1_1-section">
+        <div class="item-title">항목 1-1 &nbsp;|&nbsp; 학기 전체 성취기준의 평가계획 반영 여부 확인 <span style="font-size:10px;color:var(--gray);font-weight:400;">(고등학교)</span></div>
+        <div class="item-body">
+          <div class="form-group" style="margin-bottom:10px;">
+            <label>누락된 성취기준 코드 입력 (없으면 비워두세요)</label>
+            <input type="text" id="item1_1-codes" placeholder="예) [12국01-03], [12국01-05]" oninput="onItem1_1Change()">
+          </div>
+          <div class="preview-box" id="item1_1-preview"></div>
+          <div class="extra-opinion">
+            <label>추가 의견 (선택)</label>
+            <textarea id="item1_1-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- STEP 3: 수행평가별 항목 -->
+  <div class="card" id="perfItemsCard" style="display:none">
+    <div class="card-header">
+      <div class="step-num">3</div>
+      수행평가별 점검 항목
+    </div>
+    <div class="card-body">
+      <div class="perf-tabs" id="perfTabs"></div>
+      <div id="perfPanels"></div>
+    </div>
+  </div>
+
+  <!-- STEP 4: 출력 -->
+  <div class="card" id="outputCard" style="display:none">
+    <div class="card-header">
+      <div class="step-num">4</div>
+      컨설팅 의견 생성 및 출력
+    </div>
+    <div class="card-body">
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="generateOutput()">컨설팅 의견 생성</button>
+        <button class="btn btn-ok" onclick="downloadDocx()">워드 다운로드 (.docx)</button>
+        <button class="btn btn-secondary" onclick="downloadTxt()">텍스트 다운로드 (.txt)</button>
+        <button class="btn btn-secondary" onclick="copyToClipboard()">클립보드 복사</button>
+      </div>
+      <div id="outputPreview" style="display:none;margin-top:16px;">
+        <div style="background:#f9f9f9;border:1px solid var(--border);border-radius:6px;padding:16px;font-size:12px;line-height:1.9;white-space:pre-wrap;max-height:500px;overflow-y:auto;" id="outputText"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docx/9.0.2/docx.umd.min.js"></script>
+<script>
+// ───────────────────────────────────────────
+// 라이브러리 로딩
+// ───────────────────────────────────────────
+let LIBRARY = null;
+
+async function loadLibrary() {
+  try {
+    const res = await fetch('library.json');
+    LIBRARY = await res.json();
+  } catch(e) {
+    // 로컬 fallback
+    LIBRARY = getFallbackLibrary();
+  }
+}
+
+// ───────────────────────────────────────────
+// 상태 관리
+// ───────────────────────────────────────────
+let state = {
+  schoolLevel: '',
+  schoolName: '',
+  subjectName: '',
+  perfCount: 0,
+  reviewDate: '',
+  item1: { level: '', extra: '', propose: false, proposalText: '' },
+  item1_1: { codes: '', extra: '' },
+  performances: []
+};
+
+function saveData() {
+  state.schoolLevel = document.getElementById('schoolLevel').value;
+  state.schoolName = document.getElementById('schoolName').value;
+  state.subjectName = document.getElementById('subjectName').value;
+  state.reviewDate = document.getElementById('reviewDate').value;
+  state.item1.extra = document.getElementById('item1-extra')?.value || '';
+  state.item1.proposalText = document.getElementById('item1-proposal-text')?.value || '';
+  state.item1_1.codes = document.getElementById('item1_1-codes')?.value || '';
+  state.item1_1.extra = document.getElementById('item1_1-extra')?.value || '';
+
+  state.performances.forEach((perf, i) => {
+    perf.name = document.getElementById(`perf-${i}-name`)?.value || '';
+    // 항목2
+    perf.item2.extra = document.getElementById(`perf-${i}-item2-extra`)?.value || '';
+    perf.item2.proposalText = document.getElementById(`perf-${i}-item2-proposal-text`)?.value || '';
+    // 항목3476
+    perf.item3476.selectedSubtypes = getCheckedSubtypes(i, '3476');
+    perf.item3476.blanks = collectBlanks(i, '3476');
+    perf.item3476.extra = document.getElementById(`perf-${i}-item3476-extra`)?.value || '';
+    perf.item3476.proposalText = document.getElementById(`perf-${i}-item3476-proposal-text`)?.value || '';
+    // 항목8
+    perf.item8.selectedSubtypes = getCheckedSubtypes(i, '8');
+    perf.item8.blanks = collectBlanks(i, '8');
+    perf.item8.extra = document.getElementById(`perf-${i}-item8-extra`)?.value || '';
+    perf.item8.proposalText = document.getElementById(`perf-${i}-item8-proposal-text`)?.value || '';
+    // 항목5
+    perf.item5.selectedSubtypes = getCheckedSubtypes(i, '5');
+    perf.item5.blanks = collectBlanks(i, '5');
+    perf.item5.extra = document.getElementById(`perf-${i}-item5-extra`)?.value || '';
+    perf.item5.proposalText = document.getElementById(`perf-${i}-item5-proposal-text`)?.value || '';
+    // 기타 의견
+    perf.etc = document.getElementById(`perf-${i}-etc`)?.value || '';
+  });
+
+  localStorage.setItem('consulting-state', JSON.stringify(state));
+  updateProgress();
+}
+
+function getCheckedSubtypes(perfIdx, itemKey) {
+  const checks = document.querySelectorAll(`input[name="perf-${perfIdx}-item${itemKey}-subtype"]:checked`);
+  return Array.from(checks).map(c => c.value);
+}
+
+function collectBlanks(perfIdx, itemKey) {
+  const blanks = {};
+  const inputs = document.querySelectorAll(`[data-blank-perf="${perfIdx}"][data-blank-item="${itemKey}"]`);
+  inputs.forEach(inp => { blanks[inp.dataset.blankKey] = inp.value; });
+  return blanks;
+}
+
+function loadSavedData() {
+  const saved = localStorage.getItem('consulting-state');
+  if (!saved) return;
+  try {
+    const s = JSON.parse(saved);
+    Object.assign(state, s);
+    document.getElementById('schoolLevel').value = state.schoolLevel || '';
+    document.getElementById('schoolName').value = state.schoolName || '';
+    document.getElementById('subjectName').value = state.subjectName || '';
+    document.getElementById('reviewDate').value = state.reviewDate || '';
+    if (state.schoolLevel) { onSchoolLevelChange(true); }
+    if (state.perfCount) {
+      document.getElementById('perfCount').value = state.perfCount;
+      onPerfCountChange(true);
+    }
+  } catch(e) {}
+}
+
+// ───────────────────────────────────────────
+// 학교급 변경
+// ───────────────────────────────────────────
+function onSchoolLevelChange(silent = false) {
+  const level = document.getElementById('schoolLevel').value;
+  state.schoolLevel = level;
+  const container = document.getElementById('appContainer');
+  if (level === 'high') {
+    container.classList.add('high-school');
+  } else {
+    container.classList.remove('high-school');
+  }
+  if (level) {
+    document.getElementById('subjectItemsCard').style.display = 'block';
+    if (state.perfCount) document.getElementById('perfItemsCard').style.display = 'block';
+    document.getElementById('outputCard').style.display = 'block';
+  }
+  if (!silent) saveData();
+}
+
+// ───────────────────────────────────────────
+// 수행평가 개수 변경
+// ───────────────────────────────────────────
+function onPerfCountChange(silent = false) {
+  const count = parseInt(document.getElementById('perfCount').value);
+  if (!count) return;
+  state.perfCount = count;
+
+  // 기존 state 유지하면서 부족한 부분만 추가
+  while (state.performances.length < count) {
+    state.performances.push(createPerfState(state.performances.length));
+  }
+  state.performances = state.performances.slice(0, count);
+
+  renderPerfTabs();
+  renderPerfPanels();
+  document.getElementById('perfItemsCard').style.display = 'block';
+  document.getElementById('outputCard').style.display = 'block';
+
+  if (!silent) saveData();
+}
+
+function createPerfState(idx) {
+  return {
+    name: '',
+    item2: { level: '', extra: '', propose: false, proposalText: '' },
+    item3476: { level: '', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
+    item8: { level: '', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
+    item5: { level: '', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
+    etc: ''
+  };
+}
+
+// ───────────────────────────────────────────
+// 수행평가 탭 렌더
+// ───────────────────────────────────────────
+function renderPerfTabs() {
+  const tabs = document.getElementById('perfTabs');
+  tabs.innerHTML = '';
+  for (let i = 0; i < state.perfCount; i++) {
+    const btn = document.createElement('button');
+    btn.className = 'perf-tab' + (i === 0 ? ' active' : '');
+    btn.textContent = `수행평가 ${i + 1}`;
+    btn.onclick = () => switchPerfTab(i);
+    tabs.appendChild(btn);
+  }
+}
+
+function switchPerfTab(idx) {
+  document.querySelectorAll('.perf-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  document.querySelectorAll('.perf-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
+}
+
+// ───────────────────────────────────────────
+// 수행평가 패널 렌더
+// ───────────────────────────────────────────
+function renderPerfPanels() {
+  const panels = document.getElementById('perfPanels');
+  panels.innerHTML = '';
+  for (let i = 0; i < state.perfCount; i++) {
+    const panel = document.createElement('div');
+    panel.className = 'perf-panel' + (i === 0 ? ' active' : '');
+    panel.id = `perf-panel-${i}`;
+    panel.innerHTML = renderPerfPanel(i);
+    panels.appendChild(panel);
+  }
+  // 저장된 값 복원
+  restorePerfValues();
+}
+
+function renderPerfPanel(i) {
+  const p = state.performances[i];
+  return `
+    <div class="perf-name-row">
+      <label>수행평가명</label>
+      <input type="text" id="perf-${i}-name" placeholder="예) 탐구 보고서 작성" oninput="saveData()" value="${p.name||''}">
+    </div>
+
+    ${renderItem2(i)}
+    ${renderItem3476(i)}
+    ${renderItem8(i)}
+    ${renderItem5(i)}
+
+    <div class="item-section">
+      <div class="item-title">기타 의견 &nbsp;|&nbsp; 위 항목 외 추가 검토 의견</div>
+      <div class="item-body">
+        <div class="extra-opinion">
+          <label>기타 의견 (선택) — 위 항목에 해당하지 않는 특이사항, 권장사항 등을 자유롭게 기술하세요.</label>
+          <textarea id="perf-${i}-etc" placeholder="예) 수행평가 배점 비율이 학교 규정과 상이합니다. / 평가 시기가 집중되어 있어 조정이 필요합니다." rows="3" oninput="saveData()"></textarea>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ───────────────────────────────────────────
+// 항목 2 렌더
+// ───────────────────────────────────────────
+function renderItem2(i) {
+  return `
+  <div class="item-section">
+    <div class="item-title">항목 2 &nbsp;|&nbsp; 수행평가명에 평가 요소와 평가 방법 포함 여부 확인</div>
+    <div class="item-body">
+      <div class="radio-group">
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="적절" onchange="onPerfItemChange(${i},'item2','적절')"><span class="ok">적절</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="보완 권고" onchange="onPerfItemChange(${i},'item2','보완 권고')"><span class="warn">보완 권고</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="보완 요청" onchange="onPerfItemChange(${i},'item2','보완 요청')"><span class="req">보완 요청</span></label>
+      </div>
+      <div class="preview-box" id="perf-${i}-item2-preview"></div>
+      <div id="perf-${i}-item2-blanks"></div>
+      <div class="extra-opinion">
+        <label>추가 의견 (선택)</label>
+        <textarea id="perf-${i}-item2-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      </div>
+      <div class="proposal-area">
+        <label class="proposal-check">
+          <input type="checkbox" id="perf-${i}-item2-propose" onchange="toggleProposal('perf-${i}-item2')">
+          <span>📌 라이브러리에 추가 제안</span>
+        </label>
+        <div class="proposal-input" id="perf-${i}-item2-proposal-input">
+          <textarea placeholder="제안할 표준 문장을 입력하세요." id="perf-${i}-item2-proposal-text" oninput="saveData()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ───────────────────────────────────────────
+// 항목 3+4+7+6 렌더
+// ───────────────────────────────────────────
+function renderItem3476(i) {
+  const subtypes3476 = {
+    '보완 권고': [
+      {key:'B', label:'유형 B — 성취수준과 평가요소의 연결 미흡'},
+      {key:'C', label:'유형 C — 평가요소와 채점기준의 불일치'},
+      {key:'E', label:'유형 E — 성취수준 진술과 채점기준 척도 진술의 불일치'},
+      {key:'G', label:'유형 G — 질적 평가요소의 양적 처리'},
+    ],
+    '보완 요청': [
+      {key:'복합', label:'유형 복합 — 정합성 전반 미흡 (2가지 이상)'},
+      {key:'F', label:'유형 F — 채점기준 진술의 추상성'},
+      {key:'H', label:'유형 H — 총체적 채점기준 사용'},
+      {key:'I', label:'유형 I — 수행과제와 성취기준의 불일치'},
+      {key:'J', label:'유형 J — 성취기준 과다 나열 및 무관한 평가'},
+    ]
+  };
+
+  const subtypeChecks3476req = subtypes3476['보완 요청'].map(s =>
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item3476-subtype" value="${s.key}" onchange="on3476SubtypeChange(${i})"><span>${s.label}</span></label>`
+  ).join('');
+  const subtypeChecks3476rec = subtypes3476['보완 권고'].map(s =>
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item3476-subtype" value="${s.key}" onchange="on3476SubtypeChange(${i})"><span>${s.label}</span></label>`
+  ).join('');
+
+  return `
+  <div class="item-section">
+    <div class="item-title">
+      성취기준·성취수준·평가요소·채점기준의 정합성 확인
+      <span class="core-badge">★ 성취평가제 핵심</span>
+    </div>
+    <div class="item-body">
+      <div class="radio-group">
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item3476" value="적절" onchange="onPerfItemChange(${i},'item3476','적절')"><span class="ok">적절</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item3476" value="보완 권고" onchange="onPerfItemChange(${i},'item3476','보완 권고')"><span class="warn">보완 권고</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item3476" value="보완 요청" onchange="onPerfItemChange(${i},'item3476','보완 요청')"><span class="req">보완 요청</span></label>
+      </div>
+      <div id="perf-${i}-item3476-subtypes-rec" style="display:none;">
+        <div style="font-size:11px;color:var(--warn);font-weight:600;margin-bottom:6px;">해당 유형 선택 (1가지)</div>
+        <div class="check-group">${subtypeChecks3476rec}</div>
+      </div>
+      <div id="perf-${i}-item3476-subtypes-req" style="display:none;">
+        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
+        <div class="check-group">${subtypeChecks3476req}</div>
+      </div>
+      <div class="preview-box" id="perf-${i}-item3476-preview"></div>
+      <div id="perf-${i}-item3476-blanks"></div>
+      <div class="extra-opinion">
+        <label>추가 의견 (선택)</label>
+        <textarea id="perf-${i}-item3476-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      </div>
+      <div class="proposal-area">
+        <label class="proposal-check">
+          <input type="checkbox" id="perf-${i}-item3476-propose" onchange="toggleProposal('perf-${i}-item3476')">
+          <span>📌 라이브러리에 추가 제안</span>
+        </label>
+        <div class="proposal-input" id="perf-${i}-item3476-proposal-input">
+          <textarea placeholder="제안할 표준 문장을 입력하세요." id="perf-${i}-item3476-proposal-text" oninput="saveData()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ───────────────────────────────────────────
+// 항목 8 렌더
+// ───────────────────────────────────────────
+function renderItem8(i) {
+  const subtypes8 = [
+    {key:'암기형일반', label:'유형 1 — 암기형 일반'},
+    {key:'서논술형암기형', label:'유형 2 — 서·논술형 암기형'},
+    {key:'과제형', label:'유형 3 — 과제형'},
+    {key:'AI대리수행', label:'유형 4 — AI 대리 수행'},
+    {key:'채점기준암기유도', label:'유형 5 — 채점기준 암기 유도 표현'},
+    {key:'복합', label:'유형 6 — 복합 (2가지 이상)'},
+  ];
+  const subtypeChecks = subtypes8.map(s =>
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item8-subtype" value="${s.key}" onchange="on8SubtypeChange(${i})"><span>${s.label}</span></label>`
+  ).join('');
+
+  return `
+  <div class="item-section">
+    <div class="item-title">항목 8 &nbsp;|&nbsp; 암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인</div>
+    <div class="item-body">
+      <div class="radio-group">
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item8" value="적절" onchange="onPerfItemChange(${i},'item8','적절')"><span class="ok">적절</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item8" value="보완 요청" onchange="onPerfItemChange(${i},'item8','보완 요청')"><span class="req">보완 요청</span></label>
+      </div>
+      <div id="perf-${i}-item8-subtypes" style="display:none;">
+        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
+        <div class="check-group">${subtypeChecks}</div>
+      </div>
+      <div class="preview-box" id="perf-${i}-item8-preview"></div>
+      <div id="perf-${i}-item8-blanks"></div>
+      <div class="extra-opinion">
+        <label>추가 의견 (선택)</label>
+        <textarea id="perf-${i}-item8-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      </div>
+      <div class="proposal-area">
+        <label class="proposal-check">
+          <input type="checkbox" id="perf-${i}-item8-propose" onchange="toggleProposal('perf-${i}-item8')">
+          <span>📌 라이브러리에 추가 제안</span>
+        </label>
+        <div class="proposal-input" id="perf-${i}-item8-proposal-input">
+          <textarea placeholder="제안할 표준 문장을 입력하세요." id="perf-${i}-item8-proposal-text" oninput="saveData()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ───────────────────────────────────────────
+// 항목 5 렌더
+// ───────────────────────────────────────────
+function renderItem5(i) {
+  const subtypes5 = [
+    {key:'미응시기본점수', label:'유형 1 — 미응시·미참여 학생에게 기본점수 부여 명시'},
+    {key:'기본점수과다', label:'유형 2 — 기본점수 과다'},
+    {key:'처리기준미구분', label:'유형 3 — 미응시 학생과 최저 수행수준 미달 학생의 처리 기준 미구분'},
+  ];
+  const subtypeChecks = subtypes5.map(s =>
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item5-subtype" value="${s.key}" onchange="on5SubtypeChange(${i})"><span>${s.label}</span></label>`
+  ).join('');
+
+  return `
+  <div class="item-section">
+    <div class="item-title">항목 5 &nbsp;|&nbsp; 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인</div>
+    <div class="item-body">
+      <div class="radio-group">
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="적절" onchange="onPerfItemChange(${i},'item5','적절')"><span class="ok">적절</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="보완 요청" onchange="onPerfItemChange(${i},'item5','보완 요청')"><span class="req">보완 요청</span></label>
+      </div>
+      <div id="perf-${i}-item5-subtypes" style="display:none;">
+        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
+        <div class="check-group">${subtypeChecks}</div>
+      </div>
+      <div class="preview-box" id="perf-${i}-item5-preview"></div>
+      <div id="perf-${i}-item5-blanks"></div>
+      <div class="extra-opinion">
+        <label>추가 의견 (선택)</label>
+        <textarea id="perf-${i}-item5-extra" placeholder="추가로 기술할 내용이 있으면 입력하세요." oninput="saveData()"></textarea>
+      </div>
+      <div class="proposal-area">
+        <label class="proposal-check">
+          <input type="checkbox" id="perf-${i}-item5-propose" onchange="toggleProposal('perf-${i}-item5')">
+          <span>📌 라이브러리에 추가 제안</span>
+        </label>
+        <div class="proposal-input" id="perf-${i}-item5-proposal-input">
+          <textarea placeholder="제안할 표준 문장을 입력하세요." id="perf-${i}-item5-proposal-text" oninput="saveData()"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+// ───────────────────────────────────────────
+// 이벤트 핸들러
+// ───────────────────────────────────────────
+function onItem1Change(level) {
+  state.item1.level = level;
+  const lib = LIBRARY?.items?.item1;
+  let text = '';
+  if (lib?.sentences?.[level]?.[0]) {
+    text = lib.sentences[level][0].text;
+  }
+  const box = document.getElementById('item1-preview');
+  box.textContent = text;
+  box.className = 'preview-box show ' + (level === '적절' ? 'ok' : 'req');
+  saveData();
+}
+
+function onItem1_1Change() {
+  const codes = document.getElementById('item1_1-codes').value.trim();
+  const lib = LIBRARY?.items?.item1_1;
+  let text = '';
+  if (codes) {
+    text = (lib?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
+  } else {
+    text = lib?.sentences?.['누락 없음']?.[0]?.text || '';
+  }
+  const box = document.getElementById('item1_1-preview');
+  box.textContent = text;
+  box.className = 'preview-box show ' + (codes ? 'req' : 'ok');
+  saveData();
+}
+
+function onPerfItemChange(perfIdx, itemKey, level) {
+  state.performances[perfIdx][itemKey].level = level;
+  const previewId = `perf-${perfIdx}-${itemKey}-preview`;
+  const box = document.getElementById(previewId);
+
+  // 서브타입 패널 표시
+  if (itemKey === 'item3476') {
+    document.getElementById(`perf-${perfIdx}-item3476-subtypes-rec`).style.display = level === '보완 권고' ? 'block' : 'none';
+    document.getElementById(`perf-${perfIdx}-item3476-subtypes-req`).style.display = level === '보완 요청' ? 'block' : 'none';
+    // 다른 레벨 체크박스 초기화
+    document.querySelectorAll(`input[name="perf-${perfIdx}-item3476-subtype"]`).forEach(cb => cb.checked = false);
+    document.getElementById(`perf-${perfIdx}-item3476-blanks`).innerHTML = '';
+  }
+  if (itemKey === 'item8') {
+    document.getElementById(`perf-${perfIdx}-item8-subtypes`).style.display = level === '보완 요청' ? 'block' : 'none';
+  }
+  if (itemKey === 'item5') {
+    document.getElementById(`perf-${perfIdx}-item5-subtypes`).style.display = level === '보완 요청' ? 'block' : 'none';
+  }
+
+  if (level === '적절') {
+    const lib = LIBRARY?.items?.[itemKey === 'item3476' ? 'item3_4_7_6' : itemKey];
+    const text = lib?.sentences?.['적절']?.[0]?.text || '';
+    box.textContent = text;
+    box.className = 'preview-box show ok';
+    document.getElementById(`perf-${perfIdx}-${itemKey}-blanks`).innerHTML = '';
+  } else {
+    box.textContent = '';
+    box.className = 'preview-box';
+  }
+  saveData();
+}
+
+function on3476SubtypeChange(perfIdx) {
+  const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item3476-subtype"]:checked`)).map(c => c.value);
+  const level = state.performances[perfIdx].item3476.level;
+  const lib = LIBRARY?.items?.item3_4_7_6;
+  const blanksDiv = document.getElementById(`perf-${perfIdx}-item3476-blanks`);
+  const previewBox = document.getElementById(`perf-${perfIdx}-item3476-preview`);
+
+  let texts = [];
+  let allBlanks = [];
+
+  checked.forEach(subtype => {
+    const sentences = lib?.sentences?.[level]?.[subtype] || [];
+    sentences.forEach(s => {
+      texts.push(s.text);
+      if (s.blanks) allBlanks.push(...s.blanks.map(b => ({key: b, subtype})));
+    });
+  });
+
+  previewBox.textContent = texts.join('\n\n');
+  previewBox.className = texts.length ? ('preview-box show ' + (level === '보완 권고' ? 'warn' : 'req')) : 'preview-box';
+
+  blanksDiv.innerHTML = allBlanks.map(b => `
+    <div class="blank-group">
+      <label>✎ ${b.key} 입력</label>
+      <input type="text" placeholder="${b.key}을(를) 입력하세요"
+        data-blank-perf="${perfIdx}" data-blank-item="3476" data-blank-key="${b.subtype}_${b.key}"
+        oninput="updatePreview3476(${perfIdx})">
+    </div>
+  `).join('');
+
+  saveData();
+}
+
+function updatePreview3476(perfIdx) {
+  const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item3476-subtype"]:checked`)).map(c => c.value);
+  const level = state.performances[perfIdx].item3476.level;
+  const lib = LIBRARY?.items?.item3_4_7_6;
+  const previewBox = document.getElementById(`perf-${perfIdx}-item3476-preview`);
+  let texts = [];
+  checked.forEach(subtype => {
+    const sentences = lib?.sentences?.[level]?.[subtype] || [];
+    sentences.forEach(s => {
+      let text = s.text;
+      if (s.blanks) {
+        s.blanks.forEach(b => {
+          const inp = document.querySelector(`[data-blank-perf="${perfIdx}"][data-blank-item="3476"][data-blank-key="${subtype}_${b}"]`);
+          if (inp) text = text.replace(`{{${b}}}`, inp.value || `[${b}]`);
+        });
+      }
+      texts.push(text);
+    });
+  });
+  previewBox.textContent = texts.join('\n\n');
+  saveData();
+}
+
+function on8SubtypeChange(perfIdx) {
+  renderSubtypePreview(perfIdx, 'item8', '8');
+}
+
+function on5SubtypeChange(perfIdx) {
+  renderSubtypePreview(perfIdx, 'item5', '5');
+}
+
+function renderSubtypePreview(perfIdx, itemKey, libKey) {
+  const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-${itemKey}-subtype"]:checked`)).map(c => c.value);
+  const lib = LIBRARY?.items?.[itemKey];
+  const blanksDiv = document.getElementById(`perf-${perfIdx}-${itemKey}-blanks`);
+  const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
+  let texts = [];
+  let allBlanks = [];
+  let hasEmphasis = false;
+
+  checked.forEach(subtype => {
+    const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
+    sentences.forEach(s => {
+      texts.push({ text: s.text, emphasis: s.emphasis || false });
+      if (s.emphasis) hasEmphasis = true;
+      if (s.blanks) allBlanks.push(...s.blanks.map(b => ({key: b, subtype})));
+    });
+  });
+
+  // 항목 8 emphasis 유형은 빨간 테두리 강조
+  if (itemKey === 'item8' && hasEmphasis) {
+    previewBox.className = texts.length ? 'preview-box show req' : 'preview-box';
+    previewBox.style.borderLeftWidth = '4px';
+    previewBox.style.borderLeftColor = '#a32d2d';
+    previewBox.style.background = '#fdecea';
+  } else {
+    previewBox.className = texts.length ? 'preview-box show req' : 'preview-box';
+    previewBox.style.borderLeftWidth = '';
+    previewBox.style.borderLeftColor = '';
+    previewBox.style.background = '';
+  }
+
+  // 줄바꿈(\n) 처리하여 표시
+  previewBox.innerHTML = texts.map(t => {
+    const parts = t.text.split('\n');
+    if (parts.length > 1 && t.emphasis) {
+      return `<span>${parts[0]}</span><br><br><span style="color:#a32d2d;font-weight:600;">${parts[1]}</span>`;
+    }
+    return `<span>${t.text}</span>`;
+  }).join('<br><br>');
+
+  blanksDiv.innerHTML = allBlanks.map(b => `
+    <div class="blank-group">
+      <label>✎ ${b.key} 입력</label>
+      <input type="text" placeholder="${b.key}을(를) 입력하세요"
+        data-blank-perf="${perfIdx}" data-blank-item="${libKey}" data-blank-key="${b.subtype}_${b.key}"
+        oninput="updateSubtypePreview(${perfIdx},'${itemKey}')">
+    </div>
+  `).join('');
+  saveData();
+}
+
+function updateSubtypePreview(perfIdx, itemKey) {
+  const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-${itemKey}-subtype"]:checked`)).map(c => c.value);
+  const lib = LIBRARY?.items?.[itemKey];
+  const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
+  const libKey = itemKey === 'item8' ? '8' : '5';
+  let texts = [];
+  checked.forEach(subtype => {
+    const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
+    sentences.forEach(s => {
+      let text = s.text;
+      if (s.blanks) {
+        s.blanks.forEach(b => {
+          const inp = document.querySelector(`[data-blank-perf="${perfIdx}"][data-blank-item="${libKey}"][data-blank-key="${subtype}_${b}"]`);
+          if (inp) text = text.replace(`{{${b}}}`, inp.value || `[${b}]`);
+        });
+      }
+      texts.push(text);
+    });
+  });
+  previewBox.textContent = texts.join('\n\n');
+  saveData();
+}
+
+// ───────────────────────────────────────────
+// 라이브러리 제안 토글
+// ───────────────────────────────────────────
+function toggleProposal(prefix) {
+  const cb = document.getElementById(`${prefix}-propose`);
+  const input = document.getElementById(`${prefix}-proposal-input`);
+  if (cb && input) {
+    input.classList.toggle('show', cb.checked);
+  }
+  saveData();
+}
+
+// ───────────────────────────────────────────
+// 진행률
+// ───────────────────────────────────────────
+function updateProgress() {
+  let total = 2 + state.perfCount * 4; // item1 + item1_1(고교) + 수행평가별 4개
+  let done = 0;
+  if (state.item1.level) done++;
+  if (state.schoolLevel === 'middle' || document.getElementById('item1_1-codes')?.value !== undefined) done++;
+  state.performances.forEach(p => {
+    if (p.item2.level) done++;
+    if (p.item3476.level) done++;
+    if (p.item8.level) done++;
+    if (p.item5.level) done++;
+  });
+  const pct = total > 0 ? Math.round(done / total * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = pct + '% 완료';
+}
+
+// ───────────────────────────────────────────
+// 조사 자동 처리
+// ───────────────────────────────────────────
+function j은는(word) {
+  if (!word) return '은';
+  const code = word.charCodeAt(word.length - 1) - 0xAC00;
+  return (code >= 0 && code % 28 !== 0) ? '은' : '는';
+}
+function j이가(word) {
+  if (!word) return '이';
+  const code = word.charCodeAt(word.length - 1) - 0xAC00;
+  return (code >= 0 && code % 28 !== 0) ? '이' : '가';
+}
+// ───────────────────────────────────────────
+// 출력 생성
+// ───────────────────────────────────────────
+function generateOutput() {
+  saveData();
+  const lines = buildOutputLines();
+  const text = lines.join('\n');
+  document.getElementById('outputText').textContent = text;
+  document.getElementById('outputPreview').style.display = 'block';
+  document.getElementById('outputPreview').scrollIntoView({behavior: 'smooth'});
+}
+
+function buildOutputLines() {
+  const school = state.schoolName || '○○학교';
+  const subject = state.subjectName || '해당 과목';
+  const date = state.reviewDate || new Date().toISOString().split('T')[0];
+  const lines = [];
+
+  lines.push('2026 학생평가 종합점검단');
+  lines.push('');
+  lines.push(`                    ${school}`);
+  lines.push(`              ${subject}  평가계획서 검토의견`);
+  lines.push('');
+  lines.push('━'.repeat(52));
+  lines.push('■ 점검 결과 요약');
+  lines.push('━'.repeat(52));
+
+  // 요약 표
+  const summaryDefs = [
+    { label:'항목 1   성취기준 일치     ', getLevel:() => state.item1.level },
+    ...(state.schoolLevel==='high' ? [{ label:'항목 1-1 누락 성취기준    ', getLevel:() => state.item1_1.codes ? '보완 요청' : '적절' }] : []),
+    { label:'항목 2   수행평가명       ', getLevel:(p) => p.item2.level },
+    { label:'평가 설계 정합성 ★       ', getLevel:(p) => p.item3476.level },
+    { label:'항목 8   암기형·과제형·AI  ', getLevel:(p) => p.item8.level },
+    { label:'항목 5   미응시 기본점수   ', getLevel:(p) => p.item5.level },
+  ];
+  state.performances.forEach((p, i) => lines.push(`  [수행평가 ${i+1}] ${p.name || `수행평가 ${i+1}`}`));
+  lines.push('');
+  summaryDefs.forEach(def => {
+    const levels = state.performances.map(p => def.getLevel(p) || '—');
+    lines.push(`  ${def.label} ${levels.join(' | ')}`);
+  });
+  lines.push('');
+  lines.push('━'.repeat(52));
+  lines.push('■ 항목별 컨설팅 의견');
+  lines.push('━'.repeat(52));
+  lines.push('');
+
+  // 항목 1
+  lines.push('▶ 항목 1  교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인');
+  if (state.item1.level) {
+    lines.push(`   판정: ${state.item1.level}`);
+    const lib1 = LIBRARY?.items?.item1;
+    const t1 = lib1?.sentences?.[state.item1.level]?.[0]?.text || '';
+    if (t1) lines.push(`   → ${t1}`);
+    if (state.item1.extra) lines.push(`   [추가 의견] ${state.item1.extra}`);
+  }
+  lines.push('');
+
+  // 항목 1-1
+  if (state.schoolLevel === 'high') {
+    lines.push('▶ 항목 1-1  학기 전체 성취기준의 평가계획 반영 여부 확인');
+    const codes = state.item1_1.codes;
+    if (codes) {
+      const lib11 = LIBRARY?.items?.item1_1;
+      const t11 = (lib11?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
+      lines.push('   판정: 보완 요청');
+      lines.push(`   → ${t11}`);
+    } else {
+      lines.push('   판정: 적절');
+      lines.push('   → 학기의 모든 성취기준이 평가계획에 반영되어 있습니다.');
+    }
+    if (state.item1_1.extra) lines.push(`   [추가 의견] ${state.item1_1.extra}`);
+    lines.push('');
+  }
+
+  // 수행평가별
+  state.performances.forEach((perf, i) => {
+    const perfName = perf.name || `수행평가 ${i + 1}`;
+    const eun = j은는(perfName);
+    lines.push('─'.repeat(52));
+    lines.push(`【수행평가 ${i + 1}】 ${perfName}`);
+    lines.push('─'.repeat(52));
+
+    // 항목 2
+    lines.push('▶ 항목 2  수행평가명에 평가 요소와 평가 방법 포함 여부 확인');
+    if (perf.item2.level) {
+      lines.push(`   판정: ${perf.item2.level}`);
+      const lib2 = LIBRARY?.items?.item2;
+      const sent2 = lib2?.sentences?.[perf.item2.level]?.[0];
+      if (sent2) lines.push(`   → ${sent2.text.replace('{{수행평가명}}', perfName)}`);
+      if (perf.item2.extra) lines.push(`   [추가 의견] ${perf.item2.extra}`);
+    }
+    lines.push('');
+
+    // 정합성
+    lines.push('▶ 성취기준·성취수준·평가요소·채점기준의 정합성 확인 (성취평가제 핵심)');
+    if (perf.item3476.level) {
+      lines.push(`   판정: ${perf.item3476.level}`);
+      if (perf.item3476.level === '적절') {
+        const t3ok = LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
+        if (t3ok) lines.push(`   → ${t3ok}`);
+      } else if (perf.item3476.selectedSubtypes?.length) {
+        const lib3 = LIBRARY?.items?.item3_4_7_6;
+        perf.item3476.selectedSubtypes.forEach(subtype => {
+          const sents3 = lib3?.sentences?.[perf.item3476.level]?.[subtype] || [];
+          sents3.forEach(s => {
+            let text = s.text;
+            if (s.blanks) s.blanks.forEach(b => {
+              text = text.replace(`{{${b}}}`, perf.item3476.blanks?.[`${subtype}_${b}`] || `[${b}]`);
+            });
+            text = text.replace(`${perfName}은 `, `${perfName}${eun} `);
+            lines.push(`   → ${text}`);
+          });
+        });
+      }
+      if (perf.item3476.extra) lines.push(`   [추가 의견] ${perf.item3476.extra}`);
+    }
+    lines.push('');
+
+    // 항목 8
+    lines.push('▶ 항목 8  암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인');
+    if (perf.item8.level) {
+      lines.push(`   판정: ${perf.item8.level}`);
+      if (perf.item8.level === '적절') {
+        const t8ok = LIBRARY?.items?.item8?.sentences?.['적절']?.[0]?.text || '';
+        if (t8ok) lines.push(`   → ${t8ok}`);
+      } else if (perf.item8.selectedSubtypes?.length) {
+        const lib8 = LIBRARY?.items?.item8;
+        perf.item8.selectedSubtypes.forEach(subtype => {
+          const sents8 = lib8?.sentences?.['보완 요청']?.[subtype] || [];
+          sents8.forEach(s => {
+            let text = s.text;
+            if (s.blanks) s.blanks.forEach(b => {
+              text = text.replace(`{{${b}}}`, perf.item8.blanks?.[`${subtype}_${b}`] || `[${b}]`);
+            });
+            const parts = text.split('\n');
+            parts.forEach((part, idx) => {
+              if (!part.trim()) return;
+              const fixed = part.replace(`${perfName}은 `, `${perfName}${eun} `);
+              lines.push(idx === 0 ? `   → ${fixed}` : `   ※ ${fixed}`);
+            });
+          });
+        });
+      }
+      if (perf.item8.extra) lines.push(`   [추가 의견] ${perf.item8.extra}`);
+    }
+    lines.push('');
+
+    // 항목 5
+    lines.push('▶ 항목 5  수행평가 미응시 학생에 대한 기본점수 부여 여부 확인');
+    if (perf.item5.level) {
+      lines.push(`   판정: ${perf.item5.level}`);
+      if (perf.item5.level === '적절') {
+        const t5ok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
+        if (t5ok) lines.push(`   → ${t5ok}`);
+      } else if (perf.item5.selectedSubtypes?.length) {
+        const lib5 = LIBRARY?.items?.item5;
+        perf.item5.selectedSubtypes.forEach(subtype => {
+          const sents5 = lib5?.sentences?.['보완 요청']?.[subtype] || [];
+          sents5.forEach(s => {
+            let text = s.text;
+            if (s.blanks) s.blanks.forEach(b => {
+              text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`);
+            });
+            lines.push(`   → ${text}`);
+          });
+        });
+      }
+      if (perf.item5.extra) lines.push(`   [추가 의견] ${perf.item5.extra}`);
+    }
+    lines.push('');
+
+    // 기타 의견
+    if (perf.etc) {
+      lines.push('▶ 기타 의견');
+      lines.push(`   ${perf.etc}`);
+      lines.push('');
+    }
+  });
+
+  // 라이브러리 추가 제안
+  const proposals = collectProposals();
+  if (proposals.length > 0) {
+    lines.push('━'.repeat(52));
+    lines.push('【 라이브러리 추가 제안 】');
+    proposals.forEach((p, i) => lines.push(`${i + 1}. [${p.item}] ${p.text}`));
+    lines.push('');
+  }
+
+  lines.push('─'.repeat(52));
+  lines.push(`검토 일자: ${date}`);
+  return lines;
+}
+
+function collectProposals() {
+  const proposals = [];
+  const check = (id, textId, label) => {
+    const cb = document.getElementById(id);
+    const txt = document.getElementById(textId);
+    if (cb?.checked && txt?.value.trim()) {
+      proposals.push({item: label, text: txt.value.trim()});
+    }
+  };
+  check('item1-propose', 'item1-proposal-text', '항목 1');
+  state.performances.forEach((_, i) => {
+    check(`perf-${i}-item2-propose`, `perf-${i}-item2-proposal-text`, `항목 2 (수행평가 ${i+1})`);
+    check(`perf-${i}-item3476-propose`, `perf-${i}-item3476-proposal-text`, `항목 3+4+7+6 (수행평가 ${i+1})`);
+    check(`perf-${i}-item8-propose`, `perf-${i}-item8-proposal-text`, `항목 8 (수행평가 ${i+1})`);
+    check(`perf-${i}-item5-propose`, `perf-${i}-item5-proposal-text`, `항목 5 (수행평가 ${i+1})`);
+  });
+  return proposals;
+}
+
+// ───────────────────────────────────────────
+// 다운로드
+// ───────────────────────────────────────────
+function downloadTxt() {
+  const lines = buildOutputLines();
+  const text = lines.join('\n');
+  const blob = new Blob(['\uFEFF' + text], {type: 'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `평가계획서검토의견_${state.schoolName||'학교'}_${state.subjectName||'과목'}.txt`;
+  a.click();
+}
+
+function copyToClipboard() {
+  const text = document.getElementById('outputText').textContent;
+  if (!text) { alert('먼저 컨설팅 의견을 생성해 주세요.'); return; }
+  navigator.clipboard.writeText(text).then(() => alert('클립보드에 복사되었습니다.'));
+}
+
+async function downloadDocx() {
+  if (!window.docx) { alert('docx 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
+  const { Document, Packer, Paragraph, TextRun, AlignmentType, WidthType, ShadingType, BorderStyle, Table, TableRow, TableCell } = window.docx;
+  const school = state.schoolName || '○○학교';
+  const subject = state.subjectName || '해당 과목';
+  const date = state.reviewDate || new Date().toISOString().split('T')[0];
+
+  // ── 색상 정의
+  const C = { navy:'1A3D6B', navyLight:'E8F0F8', ok:'1D6A3A', okLight:'E8F5E9', warn:'7D4A00', warnLight:'FFF3E0', req:'A32D2D', reqLight:'FDECEA', gray:'888888', black:'222222', border:'CCCCCC', white:'FFFFFF', coreYellow:'FFFDE7' };
+
+  // ── 공통 border
+  const bd = (color='CCCCCC', size=4) => ({ style: BorderStyle.SINGLE, size, color });
+  const borders = (color='CCCCCC') => ({ top: bd(color), bottom: bd(color), left: bd(color), right: bd(color) });
+
+  // ── 헬퍼
+  const run = (text, opts={}) => new TextRun({ text, font:'맑은 고딕', size:19, ...opts });
+  const para = (children, opts={}) => new Paragraph({ children, spacing:{ before:30, after:30 }, ...opts });
+  const cell = (children, opts={}) => new TableCell({ children, margins:{ top:60, bottom:60, left:120, right:120 }, ...opts });
+
+  // ── 판정 색상 매핑
+  const levelColor = (lv) => lv === '적절' ? C.ok : lv === '보완 권고' ? C.warn : lv === '보완 요청' ? C.req : C.gray;
+  const levelBg = (lv) => lv === '적절' ? C.okLight : lv === '보완 권고' ? C.warnLight : lv === '보완 요청' ? C.reqLight : 'F5F5F5';
+
+  const children = [];
+
+  // ── 머리글
+  children.push(para([run('2026 학생평가 종합점검단', { size:18, color:C.gray })], { spacing:{ before:0, after:80 } }));
+  children.push(para([run(school, { size:26, bold:true })], { alignment:AlignmentType.CENTER, spacing:{ before:60, after:40 } }));
+  children.push(para([run(`${subject}  평가계획서 검토의견`, { size:24, bold:true })], { alignment:AlignmentType.CENTER, spacing:{ before:0, after:160 } }));
+
+  // ══════════════════════════════════
+  // 요약 표 생성
+  // ══════════════════════════════════
+  children.push(para([run('■ 점검 결과 요약', { bold:true, size:20, color:C.navy })], { spacing:{ before:80, after:60 } }));
+
+  // 헤더행
+  const headerRow = new TableRow({
+    children: [
+      cell([para([run('점검 항목', { bold:true, size:18, color:C.white })])], { width:{ size:3800, type:WidthType.DXA }, shading:{ fill:C.navy, type:ShadingType.CLEAR }, borders:borders(C.navy) }),
+      ...Array.from({ length: state.perfCount }, (_, i) => {
+        const name = state.performances[i]?.name || `수행평가 ${i+1}`;
+        return cell([para([run(name, { bold:true, size:17, color:C.white })])], { width:{ size:Math.floor(5160/state.perfCount), type:WidthType.DXA }, shading:{ fill:C.navy, type:ShadingType.CLEAR }, borders:borders(C.navy) });
+      }),
+    ]
+  });
+
+  // 항목 정의
+  const summaryItems = [
+    { label:'항목 1\n성취기준 일치', unit:'subject', getLevel: (p, i) => state.item1.level },
+    ...(state.schoolLevel === 'high' ? [{ label:'항목 1-1\n누락 성취기준', unit:'subject', getLevel: () => state.item1_1.codes ? '보완 요청' : '적절' }] : []),
+    { label:'항목 2\n수행평가명', unit:'perf', getLevel: (p) => p.item2.level },
+    { label:'성취평가에 따른\n평가 설계 정합성 ★', unit:'perf', getLevel: (p) => p.item3476.level, core:true },
+    { label:'항목 8\n암기형·과제형·AI', unit:'perf', getLevel: (p) => p.item8.level },
+    { label:'항목 5\n미응시 기본점수', unit:'perf', getLevel: (p) => p.item5.level },
+  ];
+
+  const summaryRows = summaryItems.map(item => {
+    const isCore = item.core || false;
+    const labelCell = cell(
+      [para([run(item.label, { bold:true, size:17, color: isCore ? C.req : C.navy })])],
+      { width:{ size:3800, type:WidthType.DXA }, shading:{ fill: isCore ? C.coreYellow : C.navyLight, type:ShadingType.CLEAR }, borders:borders(C.border) }
+    );
+
+    const valueCells = Array.from({ length: state.perfCount }, (_, i) => {
+      const perf = state.performances[i];
+      const level = item.getLevel(perf, i) || '';
+      const bg = level ? levelBg(level) : 'FFFFFF';
+      const color = level ? levelColor(level) : C.gray;
+      return cell(
+        [para([run(level || '—', { bold:!!level, size:17, color })], { alignment:AlignmentType.CENTER })],
+        { width:{ size:Math.floor(5160/state.perfCount), type:WidthType.DXA }, shading:{ fill:bg, type:ShadingType.CLEAR }, borders:borders(C.border) }
+      );
+    });
+
+    return new TableRow({ children: [labelCell, ...valueCells] });
+  });
+
+  const summaryTable = new Table({
+    width:{ size:8960, type:WidthType.DXA },
+    columnWidths:[3800, ...Array(state.perfCount).fill(Math.floor(5160/state.perfCount))],
+    rows:[headerRow, ...summaryRows]
+  });
+
+  children.push(summaryTable);
+  children.push(para([], { spacing:{ before:160, after:0 } }));
+
+  // ══════════════════════════════════
+  // 항목별 상세 컨설팅 의견
+  // ══════════════════════════════════
+  children.push(para([run('■ 항목별 컨설팅 의견', { bold:true, size:20, color:C.navy })], { spacing:{ before:120, after:60 } }));
+
+  // 항목 1
+  if (state.item1.level) {
+    children.push(para([run('▶ 항목 1 | 교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인', { bold:true, color:C.navy })], { spacing:{ before:100, after:30 } }));
+    children.push(para([run(`판정: ${state.item1.level}`, { bold:true, color:levelColor(state.item1.level) })], { indent:{ left:200 }, spacing:{ before:20, after:20 } }));
+    if (state.item1.level !== '적절') {
+      const text = LIBRARY?.items?.item1?.sentences?.['보완 요청']?.[0]?.text || '';
+      if (text) children.push(para([run('→ ' + text, { color:C.req })], { indent:{ left:200 }, spacing:{ before:20, after:20 } }));
+    }
+    if (state.item1.extra) children.push(para([run('[추가 의견] ' + state.item1.extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+  }
+
+  // 항목 1-1 (고교)
+  if (state.schoolLevel === 'high') {
+    children.push(para([run('▶ 항목 1-1 | 학기 전체 성취기준의 평가계획 반영 여부 확인', { bold:true, color:C.navy })], { spacing:{ before:100, after:30 } }));
+    const codes = state.item1_1.codes;
+    if (codes) {
+      children.push(para([run('판정: 보완 요청', { bold:true, color:C.req })], { indent:{ left:200 } }));
+      const text = (LIBRARY?.items?.item1_1?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
+      children.push(para([run('→ ' + text, { color:C.req })], { indent:{ left:200 } }));
+    } else {
+      children.push(para([run('판정: 적절', { bold:true, color:C.ok })], { indent:{ left:200 } }));
+    }
+    if (state.item1_1.extra) children.push(para([run('[추가 의견] ' + state.item1_1.extra, { color:C.gray })], { indent:{ left:200 } }));
+  }
+
+  // 수행평가별
+  state.performances.forEach((perf, i) => {
+    const perfName = perf.name || `수행평가 ${i+1}`;
+
+    // 수행평가 구분 헤더
+    children.push(new Paragraph({
+      children:[run(`【수행평가 ${i+1}】 ${perfName}`, { bold:true, size:20, color:C.white })],
+      shading:{ fill:C.navy, type:ShadingType.CLEAR },
+      spacing:{ before:160, after:60 },
+      indent:{ left:100 }
+    }));
+
+    // 공통 항목 렌더 함수
+    const addItem = (title, level, texts, extra, isCore=false) => {
+      if (!level) return;
+      children.push(para([run(title, { bold:true, color: isCore ? C.req : C.navy })], { spacing:{ before:80, after:20 } }));
+      children.push(para([run(`판정: ${level}`, { bold:true, color:levelColor(level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
+      texts.forEach(t => {
+        if (t) children.push(para([run('→ ' + t, { color: level==='보완 권고' ? C.warn : C.req })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
+      });
+      if (extra) children.push(para([run('[추가 의견] ' + extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+    };
+
+    // 항목 2
+    const item2Texts = [];
+    if (perf.item2.level && perf.item2.level !== '적절') {
+      const sent = LIBRARY?.items?.item2?.sentences?.[perf.item2.level]?.[0];
+      if (sent) item2Texts.push(sent.text.replace('{{수행평가명}}', perfName));
+    }
+    addItem('▶ 항목 2 | 수행평가명에 평가 요소와 평가 방법 포함 여부 확인', perf.item2.level, item2Texts, perf.item2.extra);
+
+    // 항목 3+4+7+6
+    const item3476Texts = [];
+    if (perf.item3476.level && perf.item3476.level !== '적절' && perf.item3476.selectedSubtypes?.length) {
+      const lib = LIBRARY?.items?.item3_4_7_6;
+      perf.item3476.selectedSubtypes.forEach(subtype => {
+        const sentences = lib?.sentences?.[perf.item3476.level]?.[subtype] || [];
+        sentences.forEach(s => {
+          let text = s.text;
+          if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item3476.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+          item3476Texts.push(text);
+        });
+      });
+    }
+    addItem('▶ 성취기준·성취수준·평가요소·채점기준의 정합성 확인 (성취평가제 핵심)', perf.item3476.level, item3476Texts, perf.item3476.extra, true);
+
+    // 항목 8
+    const item8Texts = [];
+    if (perf.item8.level && perf.item8.level !== '적절' && perf.item8.selectedSubtypes?.length) {
+      const lib = LIBRARY?.items?.item8;
+      perf.item8.selectedSubtypes.forEach(subtype => {
+        const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
+        sentences.forEach(s => {
+          let text = s.text;
+          if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item8.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+          item8Texts.push({ text, emphasis: s.emphasis || false });
+        });
+      });
+    }
+
+    // 항목 8 전용 출력 — emphasis 문장 빨간색 굵게 처리
+    if (perf.item8.level) {
+      const title = '▶ 항목 8 | 암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인';
+      children.push(para([run(title, { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
+      children.push(para([run(`판정: ${perf.item8.level}`, { bold:true, color:levelColor(perf.item8.level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
+      item8Texts.forEach(t => {
+        const parts = t.text.split('\n');
+        parts.forEach((part, idx) => {
+          if (!part.trim()) return;
+          // 마무리 문구(두 번째 단락)이고 emphasis가 true이면 빨간색 굵게
+          const isEmphasisLine = t.emphasis && idx > 0;
+          children.push(para(
+            [run((idx === 0 ? '→ ' : '') + part, {
+              color: isEmphasisLine ? C.req : C.req,
+              bold: isEmphasisLine,
+            })],
+            { indent:{ left:200 }, spacing:{ before: isEmphasisLine ? 60 : 10, after:10 } }
+          ));
+        });
+      });
+      if (perf.item8.extra) children.push(para([run('[추가 의견] ' + perf.item8.extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+    }
+
+    // 항목 5
+    const item5Texts = [];
+    if (perf.item5.level && perf.item5.level !== '적절' && perf.item5.selectedSubtypes?.length) {
+      const lib = LIBRARY?.items?.item5;
+      perf.item5.selectedSubtypes.forEach(subtype => {
+        const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
+        sentences.forEach(s => {
+          let text = s.text;
+          if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+          item5Texts.push(text);
+        });
+      });
+    }
+    addItem('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', perf.item5.level, item5Texts, perf.item5.extra);
+
+    // 기타 의견
+    if (perf.etc) {
+      children.push(para([run('▶ 기타 의견', { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
+      children.push(para([run(perf.etc, { color:C.black })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+    }
+  });
+
+  // 라이브러리 추가 제안
+  const proposals = collectProposals();
+  if (proposals.length > 0) {
+    children.push(para([run('■ 라이브러리 추가 제안', { bold:true, size:20, color:C.accent })], { spacing:{ before:160, after:60 } }));
+    proposals.forEach((p, i) => {
+      children.push(para([run(`${i+1}. [${p.item}] ${p.text}`, { color:C.black })], { spacing:{ before:20, after:20 } }));
+    });
+  }
+
+  // 검토 일자
+  children.push(para([run(`검토 일자: ${date}`, { size:18, color:C.gray })], { spacing:{ before:160, after:0 } }));
+
+  const doc = new Document({
+    sections:[{
+      properties:{ page:{ size:{ width:11906, height:16838 }, margin:{ top:850, right:1000, bottom:850, left:1200 } } },
+      children
+    }]
+  });
+
+  const buffer = await Packer.toBuffer(doc);
+  const blob = new Blob([buffer], { type:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `평가계획서검토의견_${school}_${subject}.docx`;
+  a.click();
+}
+
+// ───────────────────────────────────────────
+// 저장 값 복원
+// ───────────────────────────────────────────
+function restorePerfValues() {
+  state.performances.forEach((perf, i) => {
+    if (perf.item2.level) {
+      const radio = document.querySelector(`input[name="perf-${i}-item2"][value="${perf.item2.level}"]`);
+      if (radio) { radio.checked = true; onPerfItemChange(i, 'item2', perf.item2.level); }
+    }
+    if (perf.item3476.level) {
+      const radio = document.querySelector(`input[name="perf-${i}-item3476"][value="${perf.item3476.level}"]`);
+      if (radio) { radio.checked = true; onPerfItemChange(i, 'item3476', perf.item3476.level); }
+    }
+    if (perf.item8.level) {
+      const radio = document.querySelector(`input[name="perf-${i}-item8"][value="${perf.item8.level}"]`);
+      if (radio) { radio.checked = true; onPerfItemChange(i, 'item8', perf.item8.level); }
+    }
+    if (perf.item5.level) {
+      const radio = document.querySelector(`input[name="perf-${i}-item5"][value="${perf.item5.level}"]`);
+      if (radio) { radio.checked = true; onPerfItemChange(i, 'item5', perf.item5.level); }
+    }
+  });
+}
+
+function getFallbackLibrary() {
+  return { version: '2026-1', items: { item1: { sentences: { '적절': [{text:'교수·학습 계획서와 세부 평가계획서의 성취기준 코드 및 진술문이 일치합니다.'}], '보완 요청': [{text:'교수·학습 계획서와 세부 평가계획서의 성취기준이 일치하지 않습니다. 두 문서의 성취기준 코드와 진술문을 일치시켜 주시기 바랍니다.'}] } }, item1_1: { sentences: { '누락 없음': [{text:'학기의 모든 성취기준이 평가계획에 반영되어 있습니다.'}], '누락 있음': [{text:'다음 성취기준이 평가계획에 반영되지 않았습니다: {{누락된 성취기준 코드}}. 해당 성취기준을 반영하여 주시기 바랍니다.', blanks:['누락된 성취기준 코드']}] } }, item2: { sentences: { '적절': [{text:'수행평가명에 평가 요소와 평가 방법이 명확히 드러나 있습니다.'}], '보완 권고': [{text:'{{수행평가명}} 수행평가명에 평가 방법은 있으나 평가 요소가 명확하지 않습니다.', blanks:['수행평가명']}], '보완 요청': [{text:'{{수행평가명}} 수행평가명에 평가 요소가 드러나지 않습니다.', blanks:['수행평가명']}] } }, item3_4_7_6: { sentences: { '적절': [{text:'성취기준에 근거하여 성취수준·평가요소·채점기준이 일관되게 연결되어 있습니다.'}], '보완 권고': { B:[{text:'{{수행평가명}}의 성취수준과 평가요소 간의 연결이 명확하지 않습니다.', blanks:['수행평가명']}] }, '보완 요청': { I:[{text:'{{수행평가명}}의 수행과제가 성취기준과 부합하지 않습니다.', blanks:['수행평가명']}] } } }, item8: { sentences: { '적절': [{text:'수행평가가 수업 중 학생의 수행 과정을 직접 관찰·측정할 수 있도록 설계되어 있습니다.'}], '보완 요청': { 암기형일반:[{text:'{{수행평가명}}은 암기형 평가로 운영될 가능성이 높습니다.', blanks:['수행평가명']}] } } }, item5: { sentences: { '적절': [{text:'미응시·미참여 학생에 대한 처리 기준이 적절하게 명시되어 있습니다.'}], '보완 요청': { 미응시기본점수:[{text:'{{수행평가명}}에서 미응시 학생에게 {{기본점수}}점을 부여하도록 명시되어 있습니다.', blanks:['수행평가명','기본점수']}] } } } } };
+}
+
+// ───────────────────────────────────────────
+// 초기화
+// ───────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', async () => {
+  await loadLibrary();
+  loadSavedData();
+  document.getElementById('reviewDate').value = new Date().toISOString().split('T')[0];
+  updateProgress();
+});
+</script>
+</body>
+</html>
