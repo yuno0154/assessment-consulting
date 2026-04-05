@@ -2006,36 +2006,34 @@ function openSentenceModal(perfIdx, itemKey) {
   let level, lib, sentences = [];
 
   if (perfIdx === -1) {
-    // subject-level
     const subjectItem = state[`item${itemKey}`];
     level = subjectItem?.level || '';
     lib = LIBRARY?.items?.[`item${itemKey}`];
   } else {
-    // performance-level
     const perf = state.performances ? state.performances[perfIdx] : null;
     level = perf ? perf[itemKey]?.level || '' : '';
     lib = LIBRARY?.items?.[`item${itemKey}`];
   }
 
-  if (itemKey === '3') {
-    if (lib?.sentences?.[level]) {
-      Object.keys(lib.sentences[level]).forEach(subtype => {
-        (lib.sentences[level][subtype] || []).forEach(s => {
-          sentences.push({ text: s.text, blanks: s.blanks || [] });
-        });
-      });
-    }
-  } else if (lib?.sentences) {
-    if (itemKey === '1_1') {
-      // item1_1: all levels
-      Object.keys(lib.sentences).forEach(lv => {
-        (lib.sentences[lv] || []).forEach(s => {
-          sentences.push({ text: s.text, blanks: s.blanks || [] });
-        });
-      });
-    } else if (lib.sentences[level]) {
-      (lib.sentences[level] || []).forEach(s => {
+  if (!lib?.sentences) {
+    // 문장 없음
+  } else if (itemKey === '1_1') {
+    Object.keys(lib.sentences).forEach(lv => {
+      (lib.sentences[lv] || []).forEach(s => {
         sentences.push({ text: s.text, blanks: s.blanks || [] });
+      });
+    });
+  } else if (lib.sentences[level]) {
+    const levelData = lib.sentences[level];
+    if (Array.isArray(levelData)) {
+      // 배열 구조 (item1, item2)
+      levelData.forEach(s => sentences.push({ text: s.text, blanks: s.blanks || [] }));
+    } else if (typeof levelData === 'object') {
+      // 객체 구조 (item3, item4, item5 수정 요청 유형별)
+      Object.keys(levelData).forEach(subtype => {
+        (levelData[subtype] || []).forEach(s => {
+          sentences.push({ text: s.text, blanks: s.blanks || [] });
+        });
       });
     }
   }
@@ -2049,13 +2047,12 @@ function openSentenceModal(perfIdx, itemKey) {
       if (s.blanks && s.blanks.length > 0) {
         s.blanks.forEach(b => { displayText = displayText.replace(`{{${b}}}`, `[${b}]`); });
       }
-      return `<div class="library-sentence" onclick="selectSentence('${displayText.replace(/'/g, "\\'")}', ${perfIdx}, '${itemKey}')">${displayText}</div>`;
+      return `<div class="library-sentence" onclick="selectSentence('${displayText.replace(/'/g, "\'")}', ${perfIdx}, '${itemKey}')">${displayText}</div>`;
     }).join('');
   }
 
   document.getElementById('sentenceModal').classList.add('show');
 }
-
 function closeSentenceModal() {
   document.getElementById('sentenceModal').classList.remove('show');
   _modalPerfIdx = null;
