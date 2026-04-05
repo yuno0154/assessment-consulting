@@ -895,22 +895,23 @@ function onItem1_1Change() {
 function onPerfItemChange(perfIdx, itemKey, level) {
   state.performances[perfIdx][itemKey].level = level;
   const perf = state.performances[perfIdx];
+  const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
 
-  // 서브타입 패널 표시/숨김
+  // 서브타입 패널 표시/숨김 + textarea 초기화
   if (itemKey === 'item3') {
     const p = document.getElementById(`perf-${perfIdx}-item3-subtypes-req`);
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
     document.querySelectorAll(`input[name="perf-${perfIdx}-item3-subtype"]`).forEach(cb => cb.checked = false);
-    const ta3 = document.getElementById(`perf-${perfIdx}-item3-extra`);
-    if (ta3) { ta3.value = ''; perf.item3.extra = ''; }
   }
   if (itemKey === 'item4') {
     const p = document.getElementById(`perf-${perfIdx}-item4-subtypes`);
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
+    document.querySelectorAll(`input[name="perf-${perfIdx}-item4-subtype"]`).forEach(cb => cb.checked = false);
   }
   if (itemKey === 'item5') {
     const p = document.getElementById(`perf-${perfIdx}-item5-subtypes`);
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
+    document.querySelectorAll(`input[name="perf-${perfIdx}-item5-subtype"]`).forEach(cb => cb.checked = false);
   }
 
   // 판정 기준 표시 (참고용 — 출력 안 함)
@@ -921,7 +922,34 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     cBox.style.display = criteriaText ? 'block' : 'none';
   }
 
-  // 컨설팅 의견 textarea는 건드리지 않음
+  // 적절 선택 시 → 라이브러리 적절 문장을 textarea에 삽입
+  // 수정 요청 선택 시 → textarea 초기화 (유형 선택으로 채워짐)
+  const ta = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
+  if (ta) {
+    if (level === '적절') {
+      const libKey = itemKey;
+      const okText = LIBRARY?.items?.[libKey]?.sentences?.['적절']?.[0]?.text || '';
+      const text = okText.replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
+      ta.value = text;
+      perf[itemKey].extra = text;
+    } else if (level === '수정 요청') {
+      ta.value = '';
+      perf[itemKey].extra = '';
+    }
+    // 수정 권고(item2)는 유형 없으므로 첫 번째 문장 삽입
+    if (level === '수정 권고') {
+      const libData = LIBRARY?.items?.[itemKey]?.sentences?.['수정 권고'];
+      const sent = Array.isArray(libData) ? libData[0] : null;
+      if (sent) {
+        let text = sent.text;
+        if (sent.blanks) sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
+        text = text.replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
+        ta.value = text;
+        perf[itemKey].extra = text;
+      }
+    }
+  }
+
   saveData();
 }
 
