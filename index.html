@@ -614,11 +614,12 @@ function renderItem2(i) {
         <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="수정 권고" onchange="onPerfItemChange(${i},'item2','수정 권고')"><span class="warn">수정 권고</span></label>
         <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="수정 요청" onchange="onPerfItemChange(${i},'item2','수정 요청')"><span class="req">수정 요청</span></label>
       </div>
-      <div class="preview-box" id="perf-${i}-item2-preview"></div>
-      <div id="perf-${i}-item2-blanks"></div>
       <div class="input-mode-selector">
-        <label><input type="radio" name="perf-${i}-item2-inputMode" value="library" onchange="onInputModeChange(${i}, '2', 'library')"> 라이브러리</label>
+        <label><input type="radio" name="perf-${i}-item2-inputMode" value="library" onchange="onInputModeChange(${i}, '2', 'library')" checked> 라이브러리</label>
         <label><input type="radio" name="perf-${i}-item2-inputMode" value="direct" onchange="onInputModeChange(${i}, '2', 'direct')"> 직접 입력</label>
+      </div>
+      <div id="perf-${i}-item2-library-section">
+        <div class="preview-box" id="perf-${i}-item2-preview"></div>
       </div>
       <div id="perf-${i}-item2-direct-section" style="display:none;">
         <div class="direct-input-area">
@@ -948,7 +949,7 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     }
   }
 
-  // item2: 판정 변경 시 inputMode 관계없이 첫 번째 라이브러리 문장 자동 삽입
+  // 판정 변경 시 라이브러리 첫 문장 자동 반영
   const perf = state.performances[perfIdx];
   if (itemKey !== 'item3') {
     const lib = LIBRARY?.items?.[itemKey];
@@ -962,8 +963,24 @@ function onPerfItemChange(perfIdx, itemKey, level) {
       const perfName = perf.name || `수행평가 ${perfIdx + 1}`;
       text = text.replace(/{{수행평가명}}/g, perfName).replace(/\[수행평가명\]/g, perfName);
       perf[itemKey].extra = text;
+
+      // 라이브러리 모드 → preview-box 업데이트
+      const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
+      if (previewBox) {
+        previewBox.textContent = text;
+        const cls = level === '적절' ? 'ok' : level === '수정 권고' ? 'warn' : 'req';
+        previewBox.className = `preview-box show ${cls}`;
+      }
+      // 직접 입력 모드 → textarea 업데이트
       const taEl = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
       if (taEl) taEl.value = text;
+    } else {
+      // 적절이 아닌데 문장이 없으면 초기화
+      const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
+      if (previewBox && level !== '적절') {
+        previewBox.textContent = '';
+        previewBox.className = 'preview-box';
+      }
     }
   }
 
