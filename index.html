@@ -1984,6 +1984,7 @@ function getFallbackLibrary() {
 // 초기화
 // ───────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
+  localStorage.removeItem('consulting-state');
   await loadLibrary();
   loadSavedData();
   loadProposalConfig();
