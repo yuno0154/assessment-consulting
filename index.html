@@ -905,10 +905,9 @@ function onItem1_1Change() {
 
 function onPerfItemChange(perfIdx, itemKey, level) {
   state.performances[perfIdx][itemKey].level = level;
-  const previewId = `perf-${perfIdx}-${itemKey}-preview`;
-  const box = document.getElementById(previewId);
+  const perf = state.performances[perfIdx];
 
-  // 서브타입 패널 표시
+  // ── 서브타입 패널 표시/숨김
   if (itemKey === 'item3') {
     const p = document.getElementById(`perf-${perfIdx}-item3-subtypes-req`);
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
@@ -923,69 +922,40 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
   }
 
-  if (box) {
-    if (level === '적절') {
-      const lib = LIBRARY?.items?.[itemKey === 'item3' ? 'item3_4_7_6' : itemKey];
-      const text = lib?.sentences?.['적절']?.[0]?.text || '';
-      box.textContent = text;
-      box.className = 'preview-box show ok';
+  // ── 라이브러리 문장 자동 반영
+  const libKey = itemKey === 'item3' ? 'item3_4_7_6' : itemKey;
+  const lib = LIBRARY?.items?.[libKey];
+  const levelData = lib?.sentences?.[level];
+  const sent = Array.isArray(levelData) ? levelData[0] : null;
+  const perfName = perf.name || `수행평가 ${perfIdx + 1}`;
+
+  let text = '';
+  if (sent) {
+    text = sent.text;
+    if (sent.blanks) sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
+    text = text.replace(/{{수행평가명}}/g, perfName).replace(/\[수행평가명\]/g, perfName);
+  }
+
+  // preview-box 업데이트 (item2 라이브러리 모드)
+  const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
+  if (previewBox) {
+    previewBox.textContent = text;
+    if (text) {
+      const cls = level === '적절' ? 'ok' : level === '수정 권고' ? 'warn' : 'req';
+      previewBox.className = `preview-box show ${cls}`;
     } else {
-      box.textContent = '';
-      box.className = 'preview-box';
+      previewBox.className = 'preview-box';
     }
   }
 
-  // item3·4·5는 preview-box 없이 textarea 방식 — 적절 선택 시 직접 삽입
-  if (['item3','item4','item5'].includes(itemKey)) {
-    const ta = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
-    if (ta) {
-      if (level === '적절') {
-        const libKey = itemKey === 'item3' ? 'item3_4_7_6' : itemKey;
-        const okText = LIBRARY?.items?.[libKey]?.sentences?.['적절']?.[0]?.text || '';
-        ta.value = okText;
-      } else {
-        ta.value = '';
-      }
-    }
-  }
-
-  // 판정 변경 시 라이브러리 첫 문장 자동 반영
-  const perf = state.performances[perfIdx];
-  if (itemKey !== 'item3') {
-    const lib = LIBRARY?.items?.[itemKey];
-    const levelData = lib?.sentences?.[level];
-    const sent = Array.isArray(levelData) ? levelData[0] : null;
-    if (sent) {
-      let text = sent.text;
-      if (sent.blanks) {
-        sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
-      }
-      const perfName = perf.name || `수행평가 ${perfIdx + 1}`;
-      text = text.replace(/{{수행평가명}}/g, perfName).replace(/\[수행평가명\]/g, perfName);
-      perf[itemKey].extra = text;
-
-      // 라이브러리 모드 → preview-box 업데이트
-      const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
-      if (previewBox) {
-        previewBox.textContent = text;
-        const cls = level === '적절' ? 'ok' : level === '수정 권고' ? 'warn' : 'req';
-        previewBox.className = `preview-box show ${cls}`;
-      }
-      // 직접 입력 모드 → textarea 업데이트
-      const taEl = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
-      if (taEl) taEl.value = text;
-    } else {
-      // 적절이 아닌데 문장이 없으면 초기화
-      const previewBox = document.getElementById(`perf-${perfIdx}-${itemKey}-preview`);
-      if (previewBox && level !== '적절') {
-        previewBox.textContent = '';
-        previewBox.className = 'preview-box';
-      }
-    }
-  }
+  // textarea 업데이트 (item2 직접입력 모드 + item3·4·5)
+  const taEl = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
+  if (taEl) taEl.value = text;
+  perf[itemKey].extra = text;
 
   saveData();
 }
+
 
 function on3SubtypeChange(perfIdx) {
   const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item3-subtype"]:checked`)).map(c => c.value);
