@@ -934,6 +934,20 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     }
   }
 
+  // item3·4·5는 preview-box 없이 textarea 방식 — 적절 선택 시 직접 삽입
+  if (['item3','item4','item5'].includes(itemKey)) {
+    const ta = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
+    if (ta) {
+      if (level === '적절') {
+        const libKey = itemKey === 'item3' ? 'item3_4_7_6' : itemKey;
+        const okText = LIBRARY?.items?.[libKey]?.sentences?.['적절']?.[0]?.text || '';
+        ta.value = okText;
+      } else {
+        ta.value = '';
+      }
+    }
+  }
+
   // 라이브러리 모드: item2, item4, item5는 extra에 자동 저장
   const perf = state.performances[perfIdx];
   if (perf[itemKey].inputMode === 'library' && itemKey !== 'item3') {
@@ -1256,7 +1270,7 @@ function buildOutputLines() {
   // 항목 1
   lines.push('▶ 항목 1  교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인');
   if (state.item1.level) {
-    lines.push(`   판정: ${state.item1.level}`);
+    lines.push(`   검토의견: ${state.item1.level}`);
     if (state.item1.extra) lines.push(`   → ${state.item1.extra}`);
   }
   lines.push('');
@@ -1268,10 +1282,10 @@ function buildOutputLines() {
     if (codes) {
       const lib11 = LIBRARY?.items?.item1_1;
       const t11 = (lib11?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
-      lines.push('   판정: 수정 요청');
+      lines.push('   검토의견: 수정 요청');
       lines.push(`   → ${t11}`);
     } else {
-      lines.push('   판정: 적절');
+      lines.push('   검토의견: 적절');
       lines.push('   → 학기의 모든 성취기준이 평가계획에 반영되어 있습니다.');
     }
     lines.push('');
@@ -1288,7 +1302,7 @@ function buildOutputLines() {
     // 항목 2
     lines.push('▶ 항목 2  수행평가명에 평가 요소와 평가 방법 포함 여부 확인');
     if (perf.item2.level) {
-      lines.push(`   판정: ${perf.item2.level}`);
+      lines.push(`   검토의견: ${perf.item2.level}`);
       if (perf.item2.extra) lines.push(`   → ${perf.item2.extra}`);
     }
     lines.push('');
@@ -1296,7 +1310,7 @@ function buildOutputLines() {
     // 항목 3
     lines.push('▶ 항목 3  수행과제가 성취기준 도달 여부를 측정하도록 설계되었는지 여부 확인 – 성취기준·성취수준·평가요소·채점기준의 정합성 확인');
     if (perf.item3.level) {
-      lines.push(`   판정: ${perf.item3.level}`);
+      lines.push(`   검토의견: ${perf.item3.level}`);
       if (perf.item3.level === '적절') {
         const t3ok = LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
         if (t3ok) lines.push(`   → ${t3ok}`);
@@ -1311,7 +1325,7 @@ function buildOutputLines() {
     // 항목 4
     lines.push('▶ 항목 4  암기형·과제형·AI 대리 수행 가능 여부 확인');
     if (perf.item4.level) {
-      lines.push(`   판정: ${perf.item4.level}`);
+      lines.push(`   검토의견: ${perf.item4.level}`);
       if (perf.item4.level === '적절') {
         const t4ok = LIBRARY?.items?.item4?.sentences?.['적절']?.[0]?.text || '';
         if (t4ok) lines.push(`   → ${t4ok}`);
@@ -1326,7 +1340,7 @@ function buildOutputLines() {
     // 항목 5
     lines.push('▶ 항목 5  수행평가 미응시 학생에 대한 기본점수 부여 여부 확인');
     if (perf.item5.level) {
-      lines.push(`   판정: ${perf.item5.level}`);
+      lines.push(`   검토의견: ${perf.item5.level}`);
       if (perf.item5.level === '적절') {
         const t5ok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
         if (t5ok) lines.push(`   → ${t5ok}`);
@@ -1708,7 +1722,7 @@ async function downloadDocx() {
   // 항목 1
   if (state.item1.level) {
     body += makePara('▶ 항목 1 | 교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인', { bold:true, color:C.navy, spaceBefore:100, spaceAfter:20 });
-    body += makePara(`판정: ${state.item1.level}`, { bold:true, color:levelColor(state.item1.level), indent:200 });
+    body += makePara(`검토의견: ${state.item1.level}`, { bold:true, color:levelColor(state.item1.level), indent:200 });
     if (state.item1.extra) body += makePara(`→ ${state.item1.extra}`, { color:levelColor(state.item1.level), indent:200 });
   }
 
@@ -1717,11 +1731,11 @@ async function downloadDocx() {
     body += makePara('▶ 항목 1-1 | 학기 전체 성취기준의 평가계획 반영 여부 확인', { bold:true, color:C.navy, spaceBefore:100, spaceAfter:20 });
     const codes = state.item1_1.codes;
     if (codes) {
-      body += makePara('판정: 수정 요청', { bold:true, color:C.req, indent:200 });
+      body += makePara('검토의견: 수정 요청', { bold:true, color:C.req, indent:200 });
       const t = (LIBRARY?.items?.item1_1?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
       if (t) body += makePara(`→ ${t}`, { color:C.req, indent:200 });
     } else {
-      body += makePara('판정: 적절', { bold:true, color:C.ok, indent:200 });
+      body += makePara('검토의견: 적절', { bold:true, color:C.ok, indent:200 });
     }
   }
 
@@ -1735,14 +1749,14 @@ async function downloadDocx() {
     // 항목 2
     if (perf.item2.level) {
       body += makePara('▶ 항목 2 | 수행평가명에 평가 요소와 평가 방법 포함 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
-      body += makePara(`판정: ${perf.item2.level}`, { bold:true, color:levelColor(perf.item2.level), indent:200 });
+      body += makePara(`검토의견: ${perf.item2.level}`, { bold:true, color:levelColor(perf.item2.level), indent:200 });
       if (perf.item2.extra) body += makePara(`→ ${perf.item2.extra}`, { color:levelColor(perf.item2.level), indent:200 });
     }
 
     // 항목 3
     if (perf.item3.level) {
       body += makePara('▶ 항목 3 | 수행과제가 성취기준 도달 여부를 측정하도록 설계되었는지 여부 확인 – 성취기준·성취수준·평가요소·채점기준의 정합성 확인', { bold:true, color:C.req, spaceBefore:80, spaceAfter:20 });
-      body += makePara(`판정: ${perf.item3.level}`, { bold:true, color:levelColor(perf.item3.level), indent:200 });
+      body += makePara(`검토의견: ${perf.item3.level}`, { bold:true, color:levelColor(perf.item3.level), indent:200 });
       if (perf.item3.level === '적절') {
         const tok = LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
         if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
@@ -1756,7 +1770,7 @@ async function downloadDocx() {
     // 항목 4
     if (perf.item4.level) {
       body += makePara('▶ 항목 4 | 암기형·과제형·AI 대리 수행 가능 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
-      body += makePara(`판정: ${perf.item4.level}`, { bold:true, color:levelColor(perf.item4.level), indent:200 });
+      body += makePara(`검토의견: ${perf.item4.level}`, { bold:true, color:levelColor(perf.item4.level), indent:200 });
       if (perf.item4.level === '적절') {
         const tok = LIBRARY?.items?.item4?.sentences?.['적절']?.[0]?.text || '';
         if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
@@ -1770,7 +1784,7 @@ async function downloadDocx() {
     // 항목 5
     if (perf.item5.level) {
       body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
-      body += makePara(`판정: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level), indent:200 });
+      body += makePara(`검토의견: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level), indent:200 });
       if (perf.item5.level === '적절') {
         const tok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
         if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
