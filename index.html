@@ -930,30 +930,26 @@ function on3SubtypeChange(perfIdx) {
   const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item3-subtype"]:checked`)).map(c => c.value);
   const cardsDiv = document.getElementById(`perf-${perfIdx}-item3-sentence-cards`);
   const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
+  const ta = document.getElementById(`perf-${perfIdx}-item3-extra`);
 
-  // 선택된 유형의 카드 렌더
-  cardsDiv.innerHTML = checked.map(key => {
+  // 선택된 유형의 문장을 textarea에 누적 삽입
+  const texts = checked.map(key => {
     const sents = LIBRARY?.items?.item3?.sentences?.['수정 요청']?.[key];
     if (!sents || !sents[0]) return '';
-    const text = sents[0].text.replace(/\[수행평가명\]/g, perfName);
-    return `
-      <div style="border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fafafa;">
-        <div style="font-size:11px;font-weight:600;color:var(--req);margin-bottom:6px;">▸ ${type.label}</div>
-        <div style="display:flex;flex-direction:column;gap:5px;">
-          <div style="background:var(--ok-light);border:1px solid var(--ok);border-radius:4px;padding:7px 10px;font-size:11px;line-height:1.7;color:#333;cursor:pointer;"
-               onclick="appendItem3Text(${perfIdx}, \`${text.replace(/`/g,"'")}\`)">
-            <span style="font-size:10px;font-weight:600;color:var(--ok);">📚 라이브러리 — 클릭하면 그대로 삽입</span><br>${text}
-          </div>
-          <div style="background:var(--warn-light);border:1px solid #e0a800;border-radius:4px;padding:7px 10px;font-size:11px;line-height:1.7;color:#333;cursor:pointer;"
-               onclick="appendItem3Text(${perfIdx}, \`${text.replace(/`/g,"'")}\`)">
-            <span style="font-size:10px;font-weight:600;color:var(--warn);">✏️ 직접 입력 — 클릭 후 textarea에서 수정</span><br>${text}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+    return sents[0].text.replace(/\[수행평가명\]/g, perfName);
+  }).filter(Boolean);
+
+  if (ta) {
+    ta.value = texts.join('\n\n');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  // 카드 영역은 숨김
+  if (cardsDiv) cardsDiv.innerHTML = '';
 
   saveData();
 }
+
 
 function appendItem3Text(perfIdx, text) {
   const ta = document.getElementById(`perf-${perfIdx}-item3-extra`);
@@ -975,29 +971,23 @@ function on4SubtypeChange(perfIdx) {
   const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item4-subtype"]:checked`)).map(c => c.value);
   const cardsDiv = document.getElementById(`perf-${perfIdx}-item4-sentence-cards`);
   const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
+  const ta = document.getElementById(`perf-${perfIdx}-item4-extra`);
 
-  cardsDiv.innerHTML = checked.map(key => {
+  const texts = checked.map(key => {
     const sents = LIBRARY?.items?.item4?.sentences?.['수정 요청']?.[key];
     if (!sents || !sents[0]) return '';
-    const text = sents[0].text.replace(/\[수행평가명\]/g, perfName);
-    return `
-      <div style="border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fafafa;">
-        <div style="font-size:11px;font-weight:600;color:var(--req);margin-bottom:6px;">▸ ${type.label}</div>
-        <div style="display:flex;flex-direction:column;gap:5px;">
-          <div style="background:var(--ok-light);border:1px solid var(--ok);border-radius:4px;padding:7px 10px;font-size:11px;line-height:1.7;color:#333;cursor:pointer;"
-               onclick="appendItem4Text(${perfIdx}, \`${text.replace(/`/g,"'")}\`)">
-            <span style="font-size:10px;font-weight:600;color:var(--ok);">📚 라이브러리 — 클릭하면 그대로 삽입</span><br>${text}
-          </div>
-          <div style="background:var(--warn-light);border:1px solid #e0a800;border-radius:4px;padding:7px 10px;font-size:11px;line-height:1.7;color:#333;cursor:pointer;"
-               onclick="appendItem4Text(${perfIdx}, \`${text.replace(/`/g,"'")}\`)">
-            <span style="font-size:10px;font-weight:600;color:var(--warn);">✏️ 직접 입력 — 클릭 후 textarea에서 수정</span><br>${text}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+    return sents[0].text.replace(/\[수행평가명\]/g, perfName);
+  }).filter(Boolean);
 
+  if (ta) {
+    ta.value = texts.join('\n\n');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  if (cardsDiv) cardsDiv.innerHTML = '';
   saveData();
 }
+
 
 function appendItem4Text(perfIdx, text) {
   const ta = document.getElementById(`perf-${perfIdx}-item4-extra`);
@@ -1017,29 +1007,23 @@ function on5SubtypeChange(perfIdx) {
   const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item5-subtype"]:checked`)).map(c => c.value);
   const cardsDiv = document.getElementById(`perf-${perfIdx}-item5-sentence-cards`);
   const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
+  const ta = document.getElementById(`perf-${perfIdx}-item5-extra`);
 
-  cardsDiv.innerHTML = checked.map(key => {
+  const texts = checked.map(key => {
     const sents = LIBRARY?.items?.item5?.sentences?.['수정 요청']?.[key];
     if (!sents || !sents[0]) return '';
-    const text = sents[0].text.replace(/\[수행평가명\]/g, perfName);
-    return `
-      <div style="border:1px solid var(--border);border-radius:6px;padding:10px 12px;margin-bottom:8px;background:#fafafa;">
-        <div style="font-size:11px;font-weight:600;color:var(--req);margin-bottom:6px;">▸ ${type.label}</div>
-        <div style="display:flex;flex-direction:column;gap:5px;">
-          <div style="background:var(--ok-light);border:1px solid var(--ok);border-radius:4px;padding:7px 10px;font-size:11px;line-height:1.7;color:#333;cursor:pointer;"
-               onclick="appendItem5Text(${perfIdx}, \`${text.replace(/\`/g,"'")}\`)">
-            <span style="font-size:10px;font-weight:600;color:var(--ok);">📚 라이브러리 — 클릭하면 그대로 삽입</span><br>${text}
-          </div>
-          <div style="background:var(--warn-light);border:1px solid #e0a800;border-radius:4px;padding:7px 10px;font-size:11px;line-height:1.7;color:#333;cursor:pointer;"
-               onclick="appendItem5Text(${perfIdx}, \`${text.replace(/\`/g,"'")}\`)">
-            <span style="font-size:10px;font-weight:600;color:var(--warn);">✏️ 직접 입력 — 클릭 후 textarea에서 수정</span><br>${text}
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+    return sents[0].text.replace(/\[수행평가명\]/g, perfName);
+  }).filter(Boolean);
 
+  if (ta) {
+    ta.value = texts.join('\n\n');
+    ta.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  if (cardsDiv) cardsDiv.innerHTML = '';
   saveData();
 }
+
 
 function appendItem5Text(perfIdx, text) {
   const ta = document.getElementById(`perf-${perfIdx}-item5-extra`);
