@@ -29,10 +29,7 @@
   .app-header { background: var(--navy); color: white; padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
   .app-header h1 { font-size: 15px; font-weight: 600; }
   .app-header .subtitle { font-size: 11px; opacity: 0.7; margin-top: 2px; }
-  .progress-wrap { display: flex; align-items: center; gap: 8px; }
-  .progress-bar { width: 120px; height: 6px; background: rgba(255,255,255,0.3); border-radius: 3px; overflow: hidden; }
-  .progress-fill { height: 100%; background: #4caf50; border-radius: 3px; transition: width 0.3s; }
-  .progress-text { font-size: 11px; opacity: 0.9; }
+
 
   /* 컨테이너 */
   .container { max-width: 860px; margin: 0 auto; padding: 16px; }
@@ -197,10 +194,7 @@
     <div class="app-header h1" style="font-size:15px;font-weight:600;">2026 평가계획서 서면 컨설팅 시스템</div>
     <div class="subtitle">중등 학생평가 종합 점검단</div>
   </div>
-  <div class="progress-wrap">
-    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    <div class="progress-text" id="progressText">0% 완료</div>
-  </div>
+
 </div>
 
 <div class="container" id="appContainer">
@@ -369,12 +363,7 @@
 
 </div>
 
-<script src="https://unpkg.com/buffer@6.0.3/index.js"></script>
-<script>
-if(typeof global === 'undefined') { global = window; }
-if(typeof process === 'undefined') { process = { env: {} }; }
-</script>
-<script src="https://unpkg.com/docx@7.3.0/build/index.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 // ───────────────────────────────────────────
 // 라이브러리 로딩
@@ -1064,21 +1053,7 @@ function toggleProposal(prefix) {
 // ───────────────────────────────────────────
 // 진행률
 // ───────────────────────────────────────────
-function updateProgress() {
-  let total = 2 + state.perfCount * 4; // item1 + item1_1(고교) + 수행평가별 4개
-  let done = 0;
-  if (state.item1.level) done++;
-  if (state.schoolLevel === 'middle' || document.getElementById('item1_1-codes')?.value !== undefined) done++;
-  (state.performances || []).forEach(p => {
-    if (p.item2.level) done++;
-    if (p.item3476.level) done++;
-    if (p.item8.level) done++;
-    if (p.item5.level) done++;
-  });
-  const pct = total > 0 ? Math.round(done / total * 100) : 0;
-  document.getElementById('progressFill').style.width = pct + '%';
-  document.getElementById('progressText').textContent = pct + '% 완료';
-}
+function updateProgress() {}
 
 // ───────────────────────────────────────────
 // 조사 자동 처리
@@ -1488,112 +1463,118 @@ function copyToClipboard() {
 }
 
 async function downloadDocx() {
-  if (!window.docx) { alert('docx 라이브러리 로딩 중입니다. 잠시 후 다시 시도해 주세요.'); return; }
-  const { Document, Packer, Paragraph, TextRun, AlignmentType, WidthType, ShadingType, BorderStyle, Table, TableRow, TableCell } = window.docx;
+  if (typeof JSZip === 'undefined') { alert('JSZip 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로고침 후 다시 시도해 주세요.'); return; }
+
   const school = state.schoolName || '○○학교';
   const subject = state.subjectName || '해당 과목';
 
-  // ── 색상 정의
+  // ── XML 특수문자 이스케이프
+  const esc = (s) => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+  // ── 색상 (OOXML용 RGB, # 없음)
   const C = { navy:'1A3D6B', navyLight:'E8F0F8', ok:'1D6A3A', okLight:'E8F5E9', warn:'7D4A00', warnLight:'FFF3E0', req:'A32D2D', reqLight:'FDECEA', gray:'888888', black:'222222', border:'CCCCCC', white:'FFFFFF', coreYellow:'FFFDE7' };
 
-  // ── 공통 border
-  const bd = (color='CCCCCC', size=4) => ({ style: BorderStyle.SINGLE, size, color });
-  const borders = (color='CCCCCC') => ({ top: bd(color), bottom: bd(color), left: bd(color), right: bd(color) });
+  const levelColor = (lv) => lv==='적절' ? C.ok : lv==='보완 권고' ? C.warn : lv==='보완 요청' ? C.req : C.gray;
+  const levelBg    = (lv) => lv==='적절' ? C.okLight : lv==='보완 권고' ? C.warnLight : lv==='보완 요청' ? C.reqLight : 'F5F5F5';
 
-  // ── 헬퍼
-  const run = (text, opts={}) => new TextRun({ text, font:'맑은 고딕', size:19, ...opts });
-  const para = (children, opts={}) => new Paragraph({ children, spacing:{ before:30, after:30 }, ...opts });
-  const cell = (children, opts={}) => new TableCell({ children, margins:{ top:60, bottom:60, left:120, right:120 }, ...opts });
+  // ── 단락 빌더
+  // opts: { bold, color, size, align, indent, spaceBefore, spaceAfter, bgColor }
+  const makePara = (text, opts={}) => {
+    const sz   = (opts.size || 19);
+    const bold = opts.bold ? '<w:b/>' : '';
+    const clr  = opts.color ? `<w:color w:val="${opts.color}"/>` : '';
+    const jc   = opts.align ? `<w:jc w:val="${opts.align}"/>` : '';
+    const ind  = opts.indent ? `<w:ind w:left="${opts.indent}"/>` : '';
+    const spc  = `<w:spacing w:before="${opts.spaceBefore||40}" w:after="${opts.spaceAfter||40}"/>`;
+    const bg   = opts.bgColor ? `<w:shd w:val="clear" w:color="auto" w:fill="${opts.bgColor}"/>` : '';
+    // 줄바꿈 처리
+    const lines = esc(text).split('&#10;').join('</w:t><w:br/><w:t xml:space="preserve">');
+    return `<w:p><w:pPr>${spc}${jc}${ind}${bg}</w:pPr><w:r><w:rPr>${bold}${clr}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:rFonts w:ascii="맑은 고딕" w:hAnsi="맑은 고딕" w:cs="맑은 고딕"/></w:rPr><w:t xml:space="preserve">${esc(text)}</w:t></w:r></w:p>`;
+  };
 
-  // ── 판정 색상 매핑
-  const levelColor = (lv) => lv === '적절' ? C.ok : lv === '보완 권고' ? C.warn : lv === '보완 요청' ? C.req : C.gray;
-  const levelBg = (lv) => lv === '적절' ? C.okLight : lv === '보완 권고' ? C.warnLight : lv === '보완 요청' ? C.reqLight : 'F5F5F5';
+  const emptyPara = () => `<w:p><w:pPr><w:spacing w:before="60" w:after="60"/></w:pPr></w:p>`;
 
-  const children = [];
+  // ── 표 셀 빌더
+  const makeCell = (text, opts={}) => {
+    const sz    = opts.size || 17;
+    const bold  = opts.bold ? '<w:b/>' : '';
+    const clr   = opts.color ? `<w:color w:val="${opts.color}"/>` : '';
+    const fill  = opts.fill || 'FFFFFF';
+    const jc    = opts.align ? `<w:jc w:val="${opts.align}"/>` : '';
+    const wVal  = opts.width ? `<w:tcW w:w="${opts.width}" w:type="dxa"/>` : '';
+    const lines = text.split('\n');
+    const paras = lines.map(line =>
+      `<w:p><w:pPr>${jc}<w:spacing w:before="40" w:after="40"/></w:pPr><w:r><w:rPr>${bold}${clr}<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/><w:rFonts w:ascii="맑은 고딕" w:hAnsi="맑은 고딕" w:cs="맑은 고딕"/></w:rPr><w:t xml:space="preserve">${esc(line)}</w:t></w:r></w:p>`
+    ).join('');
+    return `<w:tc><w:tcPr>${wVal}<w:shd w:val="clear" w:color="auto" w:fill="${fill}"/><w:tcMar><w:top w:w="60" w:type="dxa"/><w:left w:w="120" w:type="dxa"/><w:bottom w:w="60" w:type="dxa"/><w:right w:w="120" w:type="dxa"/></w:tcMar></w:tcPr>${paras}</w:tc>`;
+  };
 
-  // ── 머리글
-  children.push(para([run('2026 학생평가 종합점검단', { size:18, color:C.gray })], { spacing:{ before:0, after:80 } }));
-  children.push(para([run(school, { size:26, bold:true })], { alignment:AlignmentType.CENTER, spacing:{ before:60, after:40 } }));
-  children.push(para([run(`${subject}  평가계획서 검토의견`, { size:24, bold:true })], { alignment:AlignmentType.CENTER, spacing:{ before:0, after:160 } }));
+  // ── 문단 수집
+  let body = '';
 
-  // ══════════════════════════════════
-  // 요약 표 생성
-  // ══════════════════════════════════
-  children.push(para([run('■ 점검 결과 요약', { bold:true, size:20, color:C.navy })], { spacing:{ before:80, after:60 } }));
+  // 머리글
+  body += makePara('2026 학생평가 종합점검단', { size:17, color:C.gray, spaceBefore:0, spaceAfter:100 });
+  body += makePara(school, { size:26, bold:true, align:'center', spaceBefore:60, spaceAfter:40 });
+  body += makePara(`${subject}  평가계획서 검토의견`, { size:24, bold:true, align:'center', spaceBefore:0, spaceAfter:160 });
+
+  // ── 요약표
+  body += makePara('■ 점검 결과 요약', { size:20, bold:true, color:C.navy, spaceBefore:80, spaceAfter:60 });
+
+  const colW1 = 3800;
+  const colW2 = Math.floor(5160 / (state.perfCount||1));
 
   // 헤더행
-  const headerRow = new TableRow({
-    children: [
-      cell([para([run('점검 항목', { bold:true, size:18, color:C.white })])], { width:{ size:3800, type:WidthType.DXA }, shading:{ fill:C.navy, type:ShadingType.CLEAR }, borders:borders(C.navy) }),
-      ...Array.from({ length: state.perfCount }, (_, i) => {
-        const name = state.performances[i]?.name || `수행평가 ${i+1}`;
-        return cell([para([run(name, { bold:true, size:17, color:C.white })])], { width:{ size:Math.floor(5160/state.perfCount), type:WidthType.DXA }, shading:{ fill:C.navy, type:ShadingType.CLEAR }, borders:borders(C.navy) });
-      }),
-    ]
-  });
+  let headerCells = makeCell('점검 항목', { fill:C.navy, color:C.white, bold:true, width:colW1 });
+  for (let i = 0; i < state.perfCount; i++) {
+    const nm = state.performances[i]?.name || `수행평가 ${i+1}`;
+    headerCells += makeCell(nm, { fill:C.navy, color:C.white, bold:true, width:colW2 });
+  }
+  let tableXml = `<w:tbl><w:tblPr><w:tblW w:w="8960" w:type="dxa"/><w:tblBorders><w:top w:val="single" w:sz="4" w:color="${C.border}"/><w:left w:val="single" w:sz="4" w:color="${C.border}"/><w:bottom w:val="single" w:sz="4" w:color="${C.border}"/><w:right w:val="single" w:sz="4" w:color="${C.border}"/><w:insideH w:val="single" w:sz="4" w:color="${C.border}"/><w:insideV w:val="single" w:sz="4" w:color="${C.border}"/></w:tblBorders></w:tblPr><w:tr>${headerCells}</w:tr>`;
 
-  // 항목 정의
   const summaryItems = [
-    { label:'항목 1\n성취기준 일치', unit:'subject', getLevel: (p, i) => state.item1.level },
-    ...(state.schoolLevel === 'high' ? [{ label:'항목 1-1\n누락 성취기준', unit:'subject', getLevel: () => state.item1_1.codes ? '보완 요청' : '적절' }] : []),
-    { label:'항목 2\n수행평가명', unit:'perf', getLevel: (p) => p.item2.level },
-    { label:'성취평가에 따른\n평가 설계 정합성 ★', unit:'perf', getLevel: (p) => p.item3476.level, core:true },
-    { label:'항목 8\n암기형·과제형·AI', unit:'perf', getLevel: (p) => p.item8.level },
-    { label:'항목 5\n미응시 기본점수', unit:'perf', getLevel: (p) => p.item5.level },
+    { label:'항목 1\n성취기준 일치', getLevel:() => state.item1.level, core:false },
+    ...(state.schoolLevel==='high' ? [{ label:'항목 1-1\n누락 성취기준', getLevel:() => state.item1_1.codes ? '보완 요청' : '적절', core:false }] : []),
+    { label:'항목 2\n수행평가명', getLevel:(p) => p?.item2.level, core:false },
+    { label:'성취평가에 따른\n평가 설계 정합성 ★', getLevel:(p) => p?.item3476.level, core:true },
+    { label:'항목 8\n암기형·과제형·AI', getLevel:(p) => p?.item8.level, core:false },
+    { label:'항목 5\n미응시 기본점수', getLevel:(p) => p?.item5.level, core:false },
   ];
 
-  const summaryRows = summaryItems.map(item => {
-    const isCore = item.core || false;
-    const labelCell = cell(
-      [para([run(item.label, { bold:true, size:17, color: isCore ? C.req : C.navy })])],
-      { width:{ size:3800, type:WidthType.DXA }, shading:{ fill: isCore ? C.coreYellow : C.navyLight, type:ShadingType.CLEAR }, borders:borders(C.border) }
-    );
-
-    const valueCells = Array.from({ length: state.perfCount }, (_, i) => {
-      const perf = state.performances[i];
-      const level = item.getLevel(perf, i) || '';
-      const bg = level ? levelBg(level) : 'FFFFFF';
-      const color = level ? levelColor(level) : C.gray;
-      return cell(
-        [para([run(level || '—', { bold:!!level, size:17, color })], { alignment:AlignmentType.CENTER })],
-        { width:{ size:Math.floor(5160/state.perfCount), type:WidthType.DXA }, shading:{ fill:bg, type:ShadingType.CLEAR }, borders:borders(C.border) }
-      );
-    });
-
-    return new TableRow({ children: [labelCell, ...valueCells] });
+  summaryItems.forEach(item => {
+    const lbFill = item.core ? C.coreYellow : C.navyLight;
+    const lbColor = item.core ? C.req : C.navy;
+    let row = makeCell(item.label, { fill:lbFill, color:lbColor, bold:true, width:colW1 });
+    for (let i = 0; i < state.perfCount; i++) {
+      const lv = item.getLevel(state.performances[i]) || '';
+      row += makeCell(lv || '—', { fill: lv ? levelBg(lv) : 'FFFFFF', color: lv ? levelColor(lv) : C.gray, bold:!!lv, align:'center', width:colW2 });
+    }
+    tableXml += `<w:tr>${row}</w:tr>`;
   });
+  tableXml += `</w:tbl>`;
+  body += tableXml;
+  body += emptyPara();
+  body += emptyPara();
 
-  const summaryTable = new Table({
-    width:{ size:8960, type:WidthType.DXA },
-    columnWidths:[3800, ...Array(state.perfCount).fill(Math.floor(5160/state.perfCount))],
-    rows:[headerRow, ...summaryRows]
-  });
-
-  children.push(summaryTable);
-  children.push(para([], { spacing:{ before:160, after:0 } }));
-
-  // ══════════════════════════════════
-  // 항목별 상세 컨설팅 의견
-  // ══════════════════════════════════
-  children.push(para([run('■ 항목별 컨설팅 의견', { bold:true, size:20, color:C.navy })], { spacing:{ before:120, after:60 } }));
+  // ── 항목별 상세
+  body += makePara('■ 항목별 컨설팅 의견', { size:20, bold:true, color:C.navy, spaceBefore:120, spaceAfter:60 });
 
   // 항목 1
   if (state.item1.level) {
-    children.push(para([run('▶ 항목 1 | 교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인', { bold:true, color:C.navy })], { spacing:{ before:100, after:30 } }));
-    children.push(para([run(`판정: ${state.item1.level}`, { bold:true, color:levelColor(state.item1.level) })], { indent:{ left:200 }, spacing:{ before:20, after:20 } }));
-    if (state.item1.extra) children.push(para([run('→ ' + state.item1.extra, { color:C.req })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+    body += makePara('▶ 항목 1 | 교수·학습 계획과 세부 평가계획의 성취기준 일치 여부 확인', { bold:true, color:C.navy, spaceBefore:100, spaceAfter:20 });
+    body += makePara(`판정: ${state.item1.level}`, { bold:true, color:levelColor(state.item1.level), indent:200 });
+    if (state.item1.extra) body += makePara(`→ ${state.item1.extra}`, { color:levelColor(state.item1.level), indent:200 });
   }
 
   // 항목 1-1 (고교)
   if (state.schoolLevel === 'high') {
-    children.push(para([run('▶ 항목 1-1 | 학기 전체 성취기준의 평가계획 반영 여부 확인', { bold:true, color:C.navy })], { spacing:{ before:100, after:30 } }));
+    body += makePara('▶ 항목 1-1 | 학기 전체 성취기준의 평가계획 반영 여부 확인', { bold:true, color:C.navy, spaceBefore:100, spaceAfter:20 });
     const codes = state.item1_1.codes;
     if (codes) {
-      children.push(para([run('판정: 보완 요청', { bold:true, color:C.req })], { indent:{ left:200 } }));
-      const text = (LIBRARY?.items?.item1_1?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
-      children.push(para([run('→ ' + text, { color:C.req })], { indent:{ left:200 } }));
+      body += makePara('판정: 보완 요청', { bold:true, color:C.req, indent:200 });
+      const t = (LIBRARY?.items?.item1_1?.sentences?.['누락 있음']?.[0]?.text || '').replace('{{누락된 성취기준 코드}}', codes);
+      if (t) body += makePara(`→ ${t}`, { color:C.req, indent:200 });
     } else {
-      children.push(para([run('판정: 적절', { bold:true, color:C.ok })], { indent:{ left:200 } }));
+      body += makePara('판정: 적절', { bold:true, color:C.ok, indent:200 });
     }
   }
 
@@ -1601,133 +1582,178 @@ async function downloadDocx() {
   (state.performances || []).forEach((perf, i) => {
     const perfName = perf.name || `수행평가 ${i+1}`;
 
-    // 수행평가 구분 헤더
-    children.push(new Paragraph({
-      children:[run(`【수행평가 ${i+1}】 ${perfName}`, { bold:true, size:20, color:C.white })],
-      shading:{ fill:C.navy, type:ShadingType.CLEAR },
-      spacing:{ before:160, after:60 },
-      indent:{ left:100 }
-    }));
+    // 수행평가 헤더 (네이비 배경)
+    body += makePara(`【수행평가 ${i+1}】 ${perfName}`, { bold:true, size:20, color:C.white, bgColor:C.navy, indent:100, spaceBefore:160, spaceAfter:60 });
 
-    // 공통 항목 렌더 함수
-    const addItem = (title, level, texts, extra, isCore=false) => {
-      if (!level) return;
-      children.push(para([run(title, { bold:true, color: isCore ? C.req : C.navy })], { spacing:{ before:80, after:20 } }));
-      children.push(para([run(`판정: ${level}`, { bold:true, color:levelColor(level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
-      texts.forEach(t => {
-        if (t) children.push(para([run('→ ' + t, { color: level==='보완 권고' ? C.warn : C.req })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
-      });
-      if (extra) children.push(para([run('[추가 의견] ' + extra, { color:C.gray })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
-    };
-
-    // 항목 2 (extra만 사용 - 라이브러리/직접입력 mode에 따라 이미 채워짐)
-    addItem('▶ 항목 2 | 수행평가명에 평가 요소와 평가 방법 포함 여부 확인', perf.item2.level, [], perf.item2.extra);
+    // 항목 2
+    if (perf.item2.level) {
+      body += makePara('▶ 항목 2 | 수행평가명에 평가 요소와 평가 방법 포함 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
+      body += makePara(`판정: ${perf.item2.level}`, { bold:true, color:levelColor(perf.item2.level), indent:200 });
+      if (perf.item2.extra) body += makePara(`→ ${perf.item2.extra}`, { color:levelColor(perf.item2.level), indent:200 });
+    }
 
     // 항목 3+4+7+6
-    const item3476Texts = [];
-    if (perf.item3476.level && perf.item3476.level !== '적절' && perf.item3476.selectedSubtypes?.length) {
-      const lib = LIBRARY?.items?.item3_4_7_6;
-      perf.item3476.selectedSubtypes?.forEach(subtype => {
-        const sentences = lib?.sentences?.[perf.item3476.level]?.[subtype] || [];
-        sentences.forEach(s => {
-          let text = s.text;
-          if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item3476.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
-          item3476Texts.push(text);
+    if (perf.item3476.level) {
+      body += makePara('▶ 성취기준·성취수준·평가요소·채점기준의 정합성 확인 (성취평가제 핵심)', { bold:true, color:C.req, spaceBefore:80, spaceAfter:20 });
+      body += makePara(`판정: ${perf.item3476.level}`, { bold:true, color:levelColor(perf.item3476.level), indent:200 });
+      if (perf.item3476.level === '적절') {
+        const tok = LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
+        if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
+      } else if (perf.item3476.selectedSubtypes?.length) {
+        const lib = LIBRARY?.items?.item3_4_7_6;
+        perf.item3476.selectedSubtypes.forEach(subtype => {
+          (lib?.sentences?.[perf.item3476.level]?.[subtype] || []).forEach(s => {
+            let text = s.text;
+            (s.blanks||[]).forEach(b => { text = text.replace(`{{${b}}}`, perf.item3476.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+            body += makePara(`→ ${text}`, { color:levelColor(perf.item3476.level), indent:200 });
+          });
         });
-      });
+      }
+      if (perf.item3476.extra) body += makePara(`[추가 의견] ${perf.item3476.extra}`, { color:C.gray, indent:200 });
     }
-    addItem('▶ 성취기준·성취수준·평가요소·채점기준의 정합성 확인 (성취평가제 핵심)', perf.item3476.level, item3476Texts, perf.item3476.extra, true);
 
     // 항목 8
-    const item8Texts = [];
-    if (perf.item8.level && perf.item8.level !== '적절' && perf.item8.selectedSubtypes?.length) {
-      const lib = LIBRARY?.items?.item8;
-      perf.item8.selectedSubtypes?.forEach(subtype => {
-        const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
-        sentences.forEach(s => {
-          let text = s.text;
-          if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item8.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
-          item8Texts.push({ text, emphasis: s.emphasis || false });
-        });
-      });
-    }
-
-    // 항목 8 — 라이브러리 모드: library texts / 직접 입력 모드: extra
     if (perf.item8.level) {
-      const title = '▶ 항목 8 | 암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인';
-      children.push(para([run(title, { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
-      children.push(para([run(`판정: ${perf.item8.level}`, { bold:true, color:levelColor(perf.item8.level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
-      if (perf.item8.inputMode === 'library' && item8Texts.length > 0) {
-        item8Texts.forEach(t => {
-          const parts = t.text.split('\n');
-          parts.forEach((part, idx) => {
-            if (!part.trim()) return;
-            const isEmphasisLine = t.emphasis && idx > 0;
-            children.push(para(
-              [run((idx === 0 ? '→ ' : '') + part, { color: isEmphasisLine ? C.req : C.req, bold: isEmphasisLine })],
-              { indent:{ left:200 }, spacing:{ before: isEmphasisLine ? 60 : 10, after:10 } }
-            ));
+      body += makePara('▶ 항목 8 | 암기형·과제형 평가 및 생성형 AI를 통한 대리 수행 가능 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
+      body += makePara(`판정: ${perf.item8.level}`, { bold:true, color:levelColor(perf.item8.level), indent:200 });
+      if (perf.item8.level === '적절') {
+        const tok = LIBRARY?.items?.item8?.sentences?.['적절']?.[0]?.text || '';
+        if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
+      } else if (perf.item8.inputMode === 'library' && perf.item8.selectedSubtypes?.length) {
+        const lib = LIBRARY?.items?.item8;
+        perf.item8.selectedSubtypes.forEach(subtype => {
+          (lib?.sentences?.['보완 요청']?.[subtype] || []).forEach(s => {
+            let text = s.text;
+            (s.blanks||[]).forEach(b => { text = text.replace(`{{${b}}}`, perf.item8.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+            text.split('\n').forEach((part, idx) => {
+              if (!part.trim()) return;
+              body += makePara((idx===0?'→ ':'')+part, { color:C.req, indent:200 });
+            });
           });
         });
       } else if (perf.item8.extra) {
-        children.push(para([run('→ ' + perf.item8.extra, { color: C.req })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+        body += makePara(`→ ${perf.item8.extra}`, { color:C.req, indent:200 });
       }
     }
 
-    // 항목 5 — 라이브러리 모드: library texts / 직접 입력 모드: extra
+    // 항목 5
     if (perf.item5.level) {
-      const item5Texts = [];
-      if (perf.item5.level !== '적절' && perf.item5.selectedSubtypes?.length) {
+      body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
+      body += makePara(`판정: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level), indent:200 });
+      if (perf.item5.level === '적절') {
+        const tok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
+        if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
+      } else if (perf.item5.inputMode === 'library' && perf.item5.selectedSubtypes?.length) {
         const lib = LIBRARY?.items?.item5;
-        perf.item5.selectedSubtypes?.forEach(subtype => {
-          const sentences = lib?.sentences?.['보완 요청']?.[subtype] || [];
-          sentences.forEach(s => {
+        perf.item5.selectedSubtypes.forEach(subtype => {
+          (lib?.sentences?.['보완 요청']?.[subtype] || []).forEach(s => {
             let text = s.text;
-            if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
-            item5Texts.push(text);
+            (s.blanks||[]).forEach(b => { text = text.replace(`{{${b}}}`, perf.item5.blanks?.[`${subtype}_${b}`] || `[${b}]`); });
+            body += makePara(`→ ${text}`, { color:C.req, indent:200 });
           });
         });
-      }
-      const title = '▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인';
-      children.push(para([run(title, { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
-      children.push(para([run(`판정: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level) })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
-      if (perf.item5.inputMode === 'library' && item5Texts.length > 0) {
-        item5Texts.forEach(t => {
-          children.push(para([run('→ ' + t, { color: C.req })], { indent:{ left:200 }, spacing:{ before:10, after:10 } }));
-        });
       } else if (perf.item5.extra) {
-        children.push(para([run('→ ' + perf.item5.extra, { color: C.req })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+        body += makePara(`→ ${perf.item5.extra}`, { color:C.req, indent:200 });
       }
     }
 
     // 기타 의견
     if (perf.etc) {
-      children.push(para([run('▶ 기타 의견', { bold:true, color:C.navy })], { spacing:{ before:80, after:20 } }));
-      children.push(para([run(perf.etc, { color:C.black })], { indent:{ left:200 }, spacing:{ before:10, after:20 } }));
+      body += makePara('▶ 기타 의견', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
+      body += makePara(perf.etc, { color:C.black, indent:200 });
     }
+    body += emptyPara();
   });
 
   // 라이브러리 추가 제안
   const proposals = collectProposals();
   if (proposals.length > 0) {
-    children.push(para([run('■ 라이브러리 추가 제안', { bold:true, size:20, color:C.navy })], { spacing:{ before:160, after:60 } }));
+    body += makePara('■ 라이브러리 추가 제안', { size:20, bold:true, color:C.navy, spaceBefore:160, spaceAfter:60 });
     proposals.forEach((p, i) => {
-      children.push(para([run(`${i+1}. [${p.item}] ${p.text}`, { color:C.black })], { spacing:{ before:20, after:20 } }));
+      body += makePara(`${i+1}. [${p.item}] ${p.text}`, { color:C.black });
     });
   }
 
-  const doc = new Document({
-    sections:[{
-      properties:{ page:{ size:{ width:11906, height:16838 }, margin:{ top:850, right:1000, bottom:850, left:1200 } } },
-      children
-    }]
-  });
+  // ── DOCX 내부 파일 조립 (OOXML)
+  const documentXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+  xmlns:o="urn:schemas-microsoft-com:office:office"
+  xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+  xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"
+  xmlns:v="urn:schemas-microsoft-com:vml"
+  xmlns:wp14="http://schemas.microsoft.com/office/word/2010/wordprocessingDrawing"
+  xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+  xmlns:w10="urn:schemas-microsoft-com:office:word"
+  xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+  xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"
+  xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"
+  xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk"
+  xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml"
+  xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape"
+  mc:Ignorable="w14 wp14">
+  <w:body>
+    ${body}
+    <w:sectPr>
+      <w:pgSz w:w="11906" w:h="16838"/>
+      <w:pgMar w:top="850" w:right="1000" w:bottom="850" w:left="1200" w:header="720" w:footer="720" w:gutter="0"/>
+    </w:sectPr>
+  </w:body>
+</w:document>`;
 
-  const blob = await Packer.toBlob(doc);
+  const relsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`;
+
+  const stylesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:docDefaults>
+    <w:rPrDefault><w:rPr>
+      <w:rFonts w:ascii="맑은 고딕" w:hAnsi="맑은 고딕" w:cs="맑은 고딕"/>
+      <w:sz w:val="19"/><w:szCs w:val="19"/>
+      <w:lang w:val="ko-KR"/>
+    </w:rPr></w:rPrDefault>
+  </w:docDefaults>
+</w:styles>`;
+
+  const appXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+  <Application>평가계획서 서면 컨설팅 시스템</Application>
+</Properties>`;
+
+  const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+  <Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+</Types>`;
+
+  const packageRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>`;
+
+  // ── JSZip으로 .docx 패키지 생성
+  const zip = new JSZip();
+  zip.file('[Content_Types].xml', contentTypesXml);
+  zip.file('_rels/.rels', packageRelsXml);
+  zip.file('word/document.xml', documentXml);
+  zip.file('word/styles.xml', stylesXml);
+  zip.file('word/_rels/document.xml.rels', relsXml);
+  zip.file('docProps/app.xml', appXml);
+
+  const blob = await zip.generateAsync({ type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = `${school}-${subject}.docx`;
+  document.body.appendChild(a);
   a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
 }
 
 // ───────────────────────────────────────────
