@@ -960,7 +960,7 @@ function onPerfItemChange(perfIdx, itemKey, level) {
         sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
       }
       const perfName = perf.name || `수행평가 ${perfIdx + 1}`;
-      text = text.replace(/{{수행평가명}}/g, perfName);
+      text = text.replace(/{{수행평가명}}/g, perfName).replace(/\[수행평가명\]/g, perfName);
       perf[itemKey].extra = text;
       const taEl = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
       if (taEl) taEl.value = text;
@@ -2018,16 +2018,20 @@ function openSentenceModal(perfIdx, itemKey) {
   _modalPerfIdx = perfIdx;
   _modalItemKey = itemKey;
 
+  // itemKey 정규화: '2' → 'item2', '3' → 'item3' 등
+  const stateKey = /^\d/.test(itemKey) ? `item${itemKey}` : itemKey;
+  // 라이브러리 키: item3 → item3, 나머지 그대로
+  const libKey = stateKey;
+
   let level, lib, sentences = [];
 
   if (perfIdx === -1) {
-    const subjectItem = state[`item${itemKey}`];
-    level = subjectItem?.level || '';
-    lib = LIBRARY?.items?.[`item${itemKey}`];
+    level = state[stateKey]?.level || '';
+    lib = LIBRARY?.items?.[libKey];
   } else {
     const perf = state.performances ? state.performances[perfIdx] : null;
-    level = perf ? perf[itemKey]?.level || '' : '';
-    lib = LIBRARY?.items?.[`item${itemKey}`];
+    level = perf ? perf[stateKey]?.level || '' : '';
+    lib = LIBRARY?.items?.[libKey];
   }
 
   if (!lib?.sentences) {
