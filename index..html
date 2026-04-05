@@ -948,11 +948,12 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     }
   }
 
-  // 라이브러리 모드: item2, item4, item5는 extra에 자동 저장
+  // item2: 판정 변경 시 inputMode 관계없이 첫 번째 라이브러리 문장 자동 삽입
   const perf = state.performances[perfIdx];
-  if (perf[itemKey].inputMode === 'library' && itemKey !== 'item3') {
+  if (itemKey !== 'item3') {
     const lib = LIBRARY?.items?.[itemKey];
-    const sent = lib?.sentences?.[level]?.[0];
+    const levelData = lib?.sentences?.[level];
+    const sent = Array.isArray(levelData) ? levelData[0] : null;
     if (sent) {
       let text = sent.text;
       if (sent.blanks) {
@@ -2040,8 +2041,16 @@ function openSentenceModal(perfIdx, itemKey) {
   } else if (lib.sentences[level]) {
     const levelData = lib.sentences[level];
     if (Array.isArray(levelData)) {
-      // 배열 구조 (item1, item2)
-      levelData.forEach(s => sentences.push({ text: s.text, blanks: s.blanks || [] }));
+      // 배열 구조 (item1, item2) — 수행평가명 치환
+      const perfName = perfIdx >= 0
+        ? (state.performances?.[perfIdx]?.name || `수행평가 ${perfIdx + 1}`)
+        : '';
+      levelData.forEach(s => {
+        let text = s.text;
+        if (s.blanks) s.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
+        if (perfName) text = text.replace(/{{수행평가명}}/g, perfName).replace(/\[수행평가명\]/g, perfName);
+        sentences.push({ text, blanks: [] });
+      });
     } else if (typeof levelData === 'object') {
       // 객체 구조 (item3, item4, item5 수정 요청 유형별)
       Object.keys(levelData).forEach(subtype => {
