@@ -866,6 +866,7 @@ function renderItem5(i) {
 // ───────────────────────────────────────────
 function onItem1Change(level) {
   state.item1.level = level;
+
   // 판정 기준 표시 (참고용 — 출력 안 함)
   const criteriaText = LIBRARY?.items?.item1?.criteria?.[level] || '';
   const cBox = document.getElementById('item1-criteria-box');
@@ -873,7 +874,15 @@ function onItem1Change(level) {
     cBox.textContent = criteriaText;
     cBox.style.display = criteriaText ? 'block' : 'none';
   }
-  // 컨설팅 의견 textarea는 건드리지 않음 (검토자가 직접 입력)
+
+  // 적절/수정 요청 → 라이브러리 문장 자동 삽입
+  const lib = LIBRARY?.items?.item1;
+  const sent = lib?.sentences?.[level]?.[0];
+  const text = sent ? sent.text : '';
+  state.item1.extra = text;
+  const ta = document.getElementById('item1-extra');
+  if (ta) ta.value = text;
+
   saveData();
 }
 
