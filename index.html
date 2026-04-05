@@ -261,9 +261,11 @@
             <label class="radio-btn"><input type="radio" name="item1" value="적절" onchange="onItem1Change('적절')"><span class="ok">적절</span></label>
             <label class="radio-btn"><input type="radio" name="item1" value="수정 요청" onchange="onItem1Change('수정 요청')"><span class="req">수정 요청</span></label>
           </div>
-          <div class="extra-opinion" style="margin-top:10px;">
-            <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (판정 선택 시 자동 삽입. 직접 수정 가능)</label>
-            <textarea id="item1-extra" rows="3" placeholder="위에서 판정을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
+          <div id="item1-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;">
+          </div>
+          <div class="extra-opinion" style="margin-top:8px;">
+            <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
+            <textarea id="item1-extra" rows="3" placeholder="컨설팅 의견을 입력하거나 아래 문장 선택 버튼을 이용하세요." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
             <div style="display:flex;gap:6px;margin-top:4px;">
               <button onclick="openSentenceModal(-1, '1')" style="padding:3px 10px;font-size:11px;border:1px solid var(--navy);background:var(--navy-light);color:var(--navy);border-radius:4px;cursor:pointer;font-family:inherit;">📚 문장 선택</button>
               <button onclick="document.getElementById('item1-extra').value='';saveData();" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
@@ -609,9 +611,10 @@ function renderItem2(i) {
         <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="수정 권고" onchange="onPerfItemChange(${i},'item2','수정 권고')"><span class="warn">수정 권고</span></label>
         <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="수정 요청" onchange="onPerfItemChange(${i},'item2','수정 요청')"><span class="req">수정 요청</span></label>
       </div>
-      <div class="extra-opinion" style="margin-top:10px;">
-        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (판정 선택 시 자동 삽입. 직접 수정 가능)</label>
-        <textarea id="perf-${i}-item2-extra" rows="4" placeholder="위에서 판정을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
+      <div id="perf-${i}-item2-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
+      <div class="extra-opinion" style="margin-top:8px;">
+        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
+        <textarea id="perf-${i}-item2-extra" rows="4" placeholder="컨설팅 의견을 입력하거나 아래 문장 선택 버튼을 이용하세요." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
         <div style="display:flex;gap:6px;margin-top:4px;">
           <button onclick="openSentenceModal(${i}, '2')" style="padding:3px 10px;font-size:11px;border:1px solid var(--navy);background:var(--navy-light);color:var(--navy);border-radius:4px;cursor:pointer;font-family:inherit;">📚 문장 선택</button>
           <button onclick="document.getElementById('perf-${i}-item2-extra').value='';saveData();" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
@@ -712,7 +715,8 @@ function renderItem3(i) {
         <div id="perf-${i}-item3-sentence-cards" style="margin-top:10px;"></div>
       </div>
       <div class="extra-opinion" style="margin-top:10px;">
-        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (선택한 문장이 자동 삽입됩니다. 직접 수정 가능)</label>
+      <div id="perf-${i}-item3-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
+        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
         <textarea id="perf-${i}-item3-extra" rows="6" placeholder="위에서 유형을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
         <div style="display:flex;gap:6px;margin-top:4px;">
           <button onclick="clearItem3Text(${i})" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
@@ -780,7 +784,8 @@ function renderItem4(i) {
         <div id="perf-${i}-item4-sentence-cards" style="margin-top:10px;"></div>
       </div>
       <div class="extra-opinion" style="margin-top:10px;">
-        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (선택한 문장이 자동 삽입됩니다. 직접 수정 가능)</label>
+      <div id="perf-${i}-item4-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
+        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
         <textarea id="perf-${i}-item4-extra" rows="6" placeholder="위에서 유형을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
         <div style="display:flex;gap:6px;margin-top:4px;">
           <button onclick="clearItem4Text(${i})" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
@@ -836,7 +841,8 @@ function renderItem5(i) {
         <div id="perf-${i}-item5-sentence-cards" style="margin-top:10px;"></div>
       </div>
       <div class="extra-opinion" style="margin-top:10px;">
-        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (선택한 문장이 자동 삽입됩니다. 직접 수정 가능)</label>
+      <div id="perf-${i}-item5-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
+        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
         <textarea id="perf-${i}-item5-extra" rows="4" placeholder="위에서 유형을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
         <div style="display:flex;gap:6px;margin-top:4px;">
           <button onclick="clearItem5Text(${i})" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
@@ -860,10 +866,14 @@ function renderItem5(i) {
 // ───────────────────────────────────────────
 function onItem1Change(level) {
   state.item1.level = level;
-  const text = LIBRARY?.items?.item1?.criteria?.[level] || '';
-  state.item1.extra = text;
-  const ta = document.getElementById('item1-extra');
-  if (ta) ta.value = text;
+  // 판정 기준 표시 (참고용 — 출력 안 함)
+  const criteriaText = LIBRARY?.items?.item1?.criteria?.[level] || '';
+  const cBox = document.getElementById('item1-criteria-box');
+  if (cBox) {
+    cBox.textContent = criteriaText;
+    cBox.style.display = criteriaText ? 'block' : 'none';
+  }
+  // 컨설팅 의견 textarea는 건드리지 않음 (검토자가 직접 입력)
   saveData();
 }
 
@@ -891,10 +901,8 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     const p = document.getElementById(`perf-${perfIdx}-item3-subtypes-req`);
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
     document.querySelectorAll(`input[name="perf-${perfIdx}-item3-subtype"]`).forEach(cb => cb.checked = false);
-    // item3 extra 초기화 (유형 선택으로 채워지므로)
     const ta3 = document.getElementById(`perf-${perfIdx}-item3-extra`);
-    if (ta3) ta3.value = '';
-    perf.item3.extra = '';
+    if (ta3) { ta3.value = ''; perf.item3.extra = ''; }
   }
   if (itemKey === 'item4') {
     const p = document.getElementById(`perf-${perfIdx}-item4-subtypes`);
@@ -905,20 +913,15 @@ function onPerfItemChange(perfIdx, itemKey, level) {
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
   }
 
-  // 판정 기준(criteria) → textarea 자동 삽입
-  const criteriaKey = itemKey;
-  const text = LIBRARY?.items?.[criteriaKey]?.criteria?.[level] || '';
-  const taEl = document.getElementById(`perf-${perfIdx}-${itemKey}-extra`);
-
-  // item3·4·5 수정 요청은 유형 선택 후 카드로 채우므로 criteria만 표시
-  if (taEl && !((['item3','item4','item5'].includes(itemKey)) && level === '수정 요청')) {
-    taEl.value = text;
-    perf[itemKey].extra = text;
-  } else if (taEl && level !== '수정 요청') {
-    taEl.value = text;
-    perf[itemKey].extra = text;
+  // 판정 기준 표시 (참고용 — 출력 안 함)
+  const criteriaText = LIBRARY?.items?.[itemKey]?.criteria?.[level] || '';
+  const cBox = document.getElementById(`perf-${perfIdx}-${itemKey}-criteria-box`);
+  if (cBox) {
+    cBox.textContent = criteriaText;
+    cBox.style.display = criteriaText ? 'block' : 'none';
   }
 
+  // 컨설팅 의견 textarea는 건드리지 않음
   saveData();
 }
 
