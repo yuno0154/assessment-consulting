@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>평가계획서 서면 컨설팅 시스템</title>
+<title>평가계획서 서면 컨설팅 시스템 [로컬 버전]</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 <style>
   :root {
@@ -68,7 +68,6 @@
   .radio-btn input:checked + span.ok { background: var(--ok-light); color: var(--ok); border-color: var(--ok); font-weight: 600; }
   .radio-btn input:checked + span.warn { background: var(--warn-light); color: var(--warn); border-color: var(--warn); font-weight: 600; }
   .radio-btn input:checked + span.req { background: var(--req-light); color: var(--req); border-color: var(--req); font-weight: 600; }
-  .radio-btn input:checked + span.skip { background: #e8e8e8; color: #444; border-color: #888; font-weight: 600; }
   .radio-btn:hover span { border-color: var(--navy); }
 
   /* 체크박스 그룹 */
@@ -139,11 +138,10 @@
   /* 수행평가 탭 */
   .perf-tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
   .perf-tab {
-    padding: 5px 10px; border-radius: 20px; border: 1px solid var(--border);
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
     font-size: 12px; cursor: pointer; background: white; color: var(--gray);
-    transition: all 0.15s; font-family: inherit; white-space: nowrap;
+    transition: all 0.15s; font-family: inherit;
   }
-  .perf-tabs.many-tabs .perf-tab { font-size: 11px; padding: 4px 8px; }
   .perf-tab.active { background: var(--navy); color: white; border-color: var(--navy); }
   .perf-panel { display: none; }
   .perf-panel.active { display: block; }
@@ -193,7 +191,7 @@
 
 <div class="app-header">
   <div>
-    <div class="app-header h1" style="font-size:15px;font-weight:600;">2026 평가계획서 서면 컨설팅 시스템</div>
+    <div class="app-header h1" style="font-size:15px;font-weight:600;">2026 평가계획서 서면 컨설팅 시스템 <span style="font-size:10px;background:#c0392b;color:white;padding:2px 7px;border-radius:10px;vertical-align:middle;margin-left:6px;">로컬 버전</span></div>
     <div class="subtitle">중등 학생평가 종합 점검단</div>
   </div>
 
@@ -236,24 +234,12 @@
       <div class="form-row">
         <div class="form-group">
           <label>수행평가 개수</label>
-          <div style="display:flex;align-items:center;gap:10px;margin-top:2px;">
-            <button id="perfCountMinus" onclick="changePerfCount(-1)"
-              style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:white;
-                     font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-                     color:var(--gray);font-family:inherit;transition:all 0.15s;"
-              onmouseover="this.style.background='var(--navy)';this.style.color='white';this.style.borderColor='var(--navy)'"
-              onmouseout="this.style.background='white';this.style.color='var(--gray)';this.style.borderColor='var(--border)'">−</button>
-            <span id="perfCountDisplay"
-              style="min-width:36px;text-align:center;font-size:15px;font-weight:700;color:var(--navy);">
-              —
-            </span>
-            <button id="perfCountPlus" onclick="changePerfCount(+1)"
-              style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border);background:white;
-                     font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;
-                     color:var(--gray);font-family:inherit;transition:all 0.15s;"
-              onmouseover="this.style.background='var(--navy)';this.style.color='white';this.style.borderColor='var(--navy)'"
-              onmouseout="this.style.background='white';this.style.color='var(--gray)';this.style.borderColor='var(--border)'">+</button>
-          </div>
+          <select id="perfCount" onchange="onPerfCountChange()">
+            <option value="">선택</option>
+            <option value="2">2개</option>
+            <option value="3">3개</option>
+            <option value="4">4개</option>
+          </select>
         </div>
       </div>
     </div>
@@ -275,44 +261,13 @@
             <label class="radio-btn"><input type="radio" name="item1" value="적절" onchange="onItem1Change('적절')"><span class="ok">적절</span></label>
             <label class="radio-btn"><input type="radio" name="item1" value="수정 요청" onchange="onItem1Change('수정 요청')"><span class="req">수정 요청</span></label>
           </div>
-          <!-- 수정 요청 선택 시: 유형 선택 -->
-          <div id="item1-subtypes" style="display:none;margin-top:8px;">
-            <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:8px;">수정 요청 유형 선택 (복수 선택 가능)</div>
-            <div class="check-group" id="item1-subtype-group" style="gap:8px;">
-              <label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-                <input type="checkbox" name="item1-subtype" value="코드불일치" onchange="onItem1SubtypeChange()" style="margin-top:3px;flex-shrink:0;">
-                <span style="display:flex;flex-direction:column;gap:3px;">
-                  <span style="font-size:12px;font-weight:600;color:#333;">유형 ① — 교수·학습 및 평가 방법과 평가 세부계획의 성취기준 코드가 다름</span>
-                  <span style="font-size:11px;color:#888;line-height:1.5;">→ 교수·학습 계획 및 평가 방법과 평가 세부계획에 기재된 성취기준 코드가 상이합니다. 두 계획에 기재된 성취기준 코드가 일치하도록 수정하여 주시기 바랍니다.</span>
-                </span>
-              </label>
-              <label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-                <input type="checkbox" name="item1-subtype" value="개요세부불일치" onchange="onItem1SubtypeChange()" style="margin-top:3px;flex-shrink:0;">
-                <span style="display:flex;flex-direction:column;gap:3px;">
-                  <span style="font-size:12px;font-weight:600;color:#333;">유형 ② — 평가 개요의 성취기준 코드와 평가 세부계획의 성취기준 코드가 일치하지 않음</span>
-                  <span style="font-size:11px;color:#888;line-height:1.5;">→ 평가 개요에 제시된 성취기준 코드와 평가 세부계획에 기재된 성취기준 코드가 일치하지 않습니다. 평가 개요와 세부계획의 성취기준 코드가 동일하게 기재되도록 수정하여 주시기 바랍니다.</span>
-                </span>
-              </label>
-              <label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-                <input type="checkbox" name="item1-subtype" value="진술문수정" onchange="onItem1SubtypeChange()" style="margin-top:3px;flex-shrink:0;">
-                <span style="display:flex;flex-direction:column;gap:3px;">
-                  <span style="font-size:12px;font-weight:600;color:#333;">유형 ③ — 성취기준 진술문이 임의로 수정되어 있음</span>
-                  <span style="font-size:11px;color:#888;line-height:1.5;">→ 평가 세부계획에 기재된 성취기준 진술문이 교육과정에 제시된 원문과 다르게 임의로 수정되어 있습니다. 2022 개정 교육과정의 성취기준인지를 확인하여 교육과정 원문 그대로 기재하여 주시기 바랍니다.</span>
-                </span>
-              </label>
-              <label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-                <input type="checkbox" name="item1-subtype" value="코드진술누락" onchange="onItem1SubtypeChange()" style="margin-top:3px;flex-shrink:0;">
-                <span style="display:flex;flex-direction:column;gap:3px;">
-                  <span style="font-size:12px;font-weight:600;color:#333;">유형 ④ — 성취기준 코드 또는 진술문이 기재되어 있지 않음</span>
-                  <span style="font-size:11px;color:#888;line-height:1.5;">→ 평가 세부계획에 성취기준 코드 또는 진술문이 기재되어 있지 않습니다. 해당 수행평가와 연계된 성취기준의 코드와 진술문을 모두 기재하여 주시기 바랍니다.</span>
-                </span>
-              </label>
-            </div>
+          <div id="item1-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;">
           </div>
           <div class="extra-opinion" style="margin-top:8px;">
-            <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견</label>
-            <textarea id="item1-extra" rows="3" placeholder="판정을 선택하면 의견이 자동으로 입력됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
+            <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
+            <textarea id="item1-extra" rows="3" placeholder="컨설팅 의견을 입력하거나 아래 문장 선택 버튼을 이용하세요." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
             <div style="display:flex;gap:6px;margin-top:4px;">
+              <button onclick="openSentenceModal(-1, '1')" style="padding:3px 10px;font-size:11px;border:1px solid var(--navy);background:var(--navy-light);color:var(--navy);border-radius:4px;cursor:pointer;font-family:inherit;">📚 문장 선택</button>
               <button onclick="document.getElementById('item1-extra').value='';saveData();" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
             </div>
           </div>
@@ -381,10 +336,23 @@
       라이브러리 추가 제안 제출
     </div>
     <div class="card-body">
-      <div class="notice">📌 아래 버튼을 클릭하면 Google Forms가 열립니다. 내용이 자동으로 채워지며, 제출 버튼만 누르시면 됩니다.</div>
-      <div id="proposalList" style="margin-bottom:12px;"></div>
+      <div class="notice">📌 체크하신 라이브러리 추가 제안을 관리자에게 전송합니다. GitHub 연결 정보를 입력해 주세요.</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>GitHub 사용자명 (관리자 계정)</label>
+          <input type="text" id="proposalGithubUser" placeholder="예) yuno0154" oninput="saveProposalConfig()">
+        </div>
+        <div class="form-group">
+          <label>Repository 이름</label>
+          <input type="text" id="proposalGithubRepo" placeholder="예) assessment-consulting" oninput="saveProposalConfig()">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>GitHub Token <span style="font-size:10px;color:var(--gray);font-weight:400;">(관리자가 공유한 토큰 또는 본인 토큰)</span></label>
+        <input type="password" id="proposalGithubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" oninput="saveProposalConfig()">
+      </div>
       <div class="btn-group">
-        <button class="btn btn-primary" onclick="submitProposals()">📮 Google Forms로 제안 전송</button>
+        <button class="btn btn-primary" onclick="submitProposals()">제안 전송 ↗</button>
       </div>
       <div id="proposalStatus" style="display:none;margin-top:10px;padding:8px 12px;border-radius:4px;font-size:12px;"></div>
     </div>
@@ -392,21 +360,19 @@
 
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="./jszip.min.js"></script>
 <script>
 // ───────────────────────────────────────────
-// 라이브러리 로딩
+// 라이브러리 로딩 (로컬 버전 — 인터넷 불필요)
 // ───────────────────────────────────────────
 let LIBRARY = null;
 
+// library.json 전체 데이터 인라인 포함 (로컬/오프라인 구동 전용)
+const LIBRARY_EMBEDDED = {"version":"2026-1","items":{"item1":{"sentences":{"적절":[{"text":"교수·학습 및 평가 방법과 평가 세부계획의 성취기준 코드 및 진술문이 일치합니다."}],"수정 요청":[{"text":"교수·학습 및 평가 방법과 평가 세부계획의 성취기준 정보가 일치하지 않으므로, 성취기준 코드와 진술문을 동일하게 수정하여 주시기 바랍니다."}]},"criteria":{"적절":"교수·학습 및 평가 방법과 평가 세부계획의 ① 성취기준 코드, ② 성취기준 진술문이 모두 일치한다.","수정 요청":"교수·학습 및 평가 방법과 평가 세부계획의 성취기준 코드가 다르거나, 진술문이 임의로 수정되어 있거나, 성취기준 코드 또는 진술문이 기재되어 있지 않다."}},"item1_1":{"sentences":{"누락 없음":[{"text":"학기의 모든 성취기준이 평가계획에 반영되어 있습니다."}],"누락 있음":[{"text":"다음 성취기준이 평가계획에 반영되지 않았습니다: {{누락된 성취기준 코드}} 해당 성취기준을 수행평가 또는 정기고사 계획에 반영하여 주시기 바랍니다.","blanks":["누락된 성취기준 코드"]}]}},"item2":{"sentences":{"적절":[{"text":"수행평가명에 평가 요소와 평가 방법이 명확히 드러나 있어, 학생과 학부모가 무엇을 어떻게 평가받는지 파악할 수 있습니다."}],"수정 권고":[{"text":"'{{수행평가명}}'은 평가 방법만 강조되어 평가 요소가 모호합니다. 성취기준과 연계된 핵심 요소를 명칭에 반영해 주시기 바랍니다.","blanks":["수행평가명"]},{"text":"'{{수행평가명}}'은 평가 요소의 범위가 너무 넓고 추상적입니다. 핵심 내용이 직관적으로 드러나도록 명칭을 구체화해 주시기 바랍니다.","blanks":["수행평가명"]}],"수정 요청":[{"text":"'{{수행평가명}}' 수행평가명에 평가 요소가 드러나지 않아 무엇을 평가하는지 파악하기 어렵습니다. 수행평가명은 평가 요소(무엇을)와 평가 방법(어떻게)이 함께 드러나도록 구성하여 주시기 바랍니다.","blanks":["수행평가명"]}]},"criteria":{"적절":"수행평가명에 ① 평가 요소(무엇을 평가하는가)와 ② 평가 방법(어떻게 수행하는가)이 모두 드러나 있다.","수정 권고":"평가 방법은 있으나 성취기준과 연계된 평가 요소가 모호하거나 그 범위가 지나치게 포괄적이다.","수정 요청":"수행평가명에 평가 요소가 제시되어 있지 않아 무엇을 평가하는지 파악하기 어렵다."}},"item3":{"sentences":{"적절":[{"text":"수행과제의 성취수준이 성취기준에 근거하여 도달 정도를 구체적으로 진술하고 있으며, 성취수준에서 도출한 평가요소와 채점기준이 논리적으로 일관되게 연결되어 있습니다. 또한 채점기준이 평가요소의 성격(질적·양적)에 따라 적합한 방식으로 구분되어 있으며, 학생의 수행 결과를 관찰하고 즉시 판단할 수 있도록 구체적으로 기술되어 있습니다."}],"수정 요청":{"코드누락":[{"text":"'[수행평가명]' 평가 세부계획에 누락된 성취기준의 진술문이 제시되어 있지 않습니다. 성취기준 진술문은 수행과제 및 채점기준 설계의 출발점이 되므로, 교육과정에 제시된 성취기준 진술문을 그대로 기재하여 주시기 바랍니다."}],"과다통합":[{"text":"'[수행평가명]'에 지나치게 많은 성취기준이 하나의 수행과제로 통합되어 있어 각 성취기준에 대한 학생의 개별적 도달 정도를 정밀하게 판별하기 어렵습니다. 수행과제는 핵심 성취기준을 중심으로 구성하여 학생의 도달 정도를 변별력 있게 측정할 수 있도록 재검토하여 주시기 바랍니다."}],"도달미반영":[{"text":"'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 적절하게 반영하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도가 구체적으로 드러나도록 성취수준을 보완하여 주시기 바랍니다."}],"변별력미흡":[{"text":"'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 수준별로 변별력 있게 구분하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도를 변별력 있게 구분하여 성취도를 판별할 수 있도록 보완하여 주시기 바랍니다."}],"단계형식일반":[{"text":"'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 5단계(A·B·C·D·E) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다."}],"단계형식예체능":[{"text":"'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 3단계(A·B·C) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다."}],"평가요소연결":[{"text":"'[수행평가명]'의 성취수준에서 도출한 평가요소와 채점기준의 평가요소 간 논리적 연결이 명확하지 않습니다. 성취수준에서 도출한 평가요소가 채점기준에 그대로 반영되어 있는지 상호 일치 여부를 재검토하여 주시기 바랍니다."}],"과제성취불일치":[{"text":"'[수행평가명]'의 수행과제가 제시된 성취기준의 핵심 내용을 실질적으로 측정하기 어려운 구조입니다. 수행과제와 성취기준 간의 연계성을 전면 재검토하여 주시기 바랍니다."}],"총체적채점":[{"text":"'[수행평가명]'의 수행과제는 평가요소별 수행 수준을 구분하는 분석적 채점기준이 적합하나, 평가요소별 구분 없이 전체적인 인상으로 판단하는 총체적 채점기준으로 구성되어 있습니다. 평가요소별로 수행 수준의 차이가 드러나는 분석적 채점기준으로 재구성하여 주시기 바랍니다."}],"질적양적":[{"text":"'[수행평가명]'의 채점기준이 질적 수준으로 구분되어야 하는 평가요소임에도 포함 요소의 개수·횟수 등 양적 기준으로만 처리되어 있어 수행 수준의 질적 차이를 판별하기 어렵습니다. 평가요소의 성격에 맞게 질적 수준이 드러나도록 채점기준을 수정하여 주시기 바랍니다."}],"추상표현":[{"text":"'[수행평가명]'의 채점기준이 관찰 가능한 행동 수준이 아닌 추상적·주관적 표현으로 기술되어 있어 채점자 간 일관된 점수 부여가 어렵습니다. 학생의 수행 결과를 직접 관찰하고 즉시 판단할 수 있는 구체적인 행동 수준으로 채점기준을 수정하여 주시기 바랍니다."}],"개수형":[{"text":"'[수행평가명]'의 채점기준이 포함 요소의 개수로만 수행 수준을 구분하고 있어 수행의 질적 차이가 반영되지 않습니다. 또한 학생이 정답 항목을 사전에 유추할 수 있어 암기 유도의 가능성이 있습니다. 수행의 질적 차이가 드러나도록 채점기준을 수정하여 주시기 바랍니다."}],"복합":[{"text":"'[수행평가명]'에서 위에 제시된 사유들이 복합적으로 나타나 평가 세부계획의 전반적인 재구성이 필요합니다. 성취기준에서 출발하여 성취수준·평가요소·채점기준이 논리적으로 연결되도록 전면 재검토하여 주시기 바랍니다."}]}},"criteria":{"적절":"수행과제의 성취수준이 성취기준에 근거하여 도달 정도를 구체적으로 진술하고 있으며, 성취수준에서 도출한 평가요소와 채점기준이 논리적으로 일관되게 연결되어 있고, 채점기준이 평가요소의 성격에 따라 구체적으로 기술되어 있다.","수정 요청":"성취수준 진술, 평가요소 연결, 채점기준 구성 중 하나 이상이 성취평가제의 취지에 부합하지 않는다. 해당 유형을 선택하여 구체적인 의견을 작성하세요."}},"item4":{"sentences":{"적절":[{"text":"수행평가가 수업 중 교사의 직접 관찰 하에 학생의 사고 과정과 수행 역량을 확인할 수 있도록 설계되어 있으며, 성취평가제의 취지에 부합하는 과정 중심 평가로 판단됩니다."}],"수정 요청":{"서논술암기형":[{"text":"'[수행평가명]'은 서·논술형 평가로 계획되어 있으나, 탐구·분석·적용 등 사고 과정 없이 교과서 개념·공식·용어 등을 그대로 재현하거나 정해진 답을 서술하는 암기형으로 운영될 가능성이 높습니다. 성취기준에서 요구하는 사고 과정과 수행 역량이 드러날 수 있는 방식으로 수행과제를 재설계하여 주시기 바랍니다."}],"과제형완성":[{"text":"'[수행평가명]'에 수업 중 완성하기 어려운 평가 요소가 포함되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 완성 가능한 범위와 방식으로 평가계획을 조정하여 주시기 바랍니다."}],"과제형제출":[{"text":"'[수행평가명]'의 평가계획서에 제출 기한이 명시되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 수행 가능한 방식으로 계획을 수정하여 주시기 바랍니다."}],"AI대리수행":[{"text":"'[수행평가명]'은 조사·분석·글쓰기 등 생성형 AI를 활용한 대리 수행 가능성을 배제하기 어려운 구조입니다. 평가의 공정성과 신뢰성을 확보하기 위해 평가계획서에 AI 활용 조건·제한·유의사항을 구체적으로 명시하여 주시기 바랍니다."}],"채점암기유도":[{"text":"'[수행평가명]'의 채점기준에 정답의 개수·항목 수가 명시되어 있거나 교과서의 특정 개념·용어·내용을 그대로 서술하도록 요구하고 있어 사전 암기를 유도할 가능성이 있습니다. 학생의 사고 과정과 수행 역량의 질적 수준이 드러날 수 있도록 채점기준을 수정하여 주시기 바랍니다."}],"채점기준표미제시":[{"text":"'[수행평가명]'의 평가계획서에 채점기준표가 제시되어 있지 않으며, 채점기준의 내용이 정답을 암시하는 구조로 구성되어 있어 사전에 문항이나 정답 범위를 공개하는 방식의 암기형 평가로 운영될 가능성이 높습니다. 성취평가제의 취지에 부합하는 수행평가로 개선하여 주시기 바랍니다."}]}},"criteria":{"적절":"수업 중 교사가 학생의 수행 과정을 직접 관찰할 수 있도록 설계되어 있으며, 암기형·과제형·AI 대리 수행 가능성이 없다.","수정 요청":"암기형·과제형으로 운영될 가능성이 있거나 AI 대리 수행 가능성이 있다. 해당 유형을 선택하여 구체적인 의견을 작성하세요."}},"item5":{"sentences":{"적절":[{"text":"미응시·미참여 학생에 대한 0점 처리 기준과 참여했으나 최저 수행수준에 미치지 못한 학생에 대한 기본점수 부여 기준이 명시되어 있어 학업성적관리규정에 부합하게 계획이 수립되어 있습니다."}],"수정 요청":{"미응시기본점수":[{"text":"'[수행평가명]'에서 미응시·미참여 학생에게 기본점수를 부여하도록 명시되어 있습니다. 학업성적관리규정에 따라 수행평가에 참여하지 않은 학생은 0점으로 처리하여야 하므로, 해당 조항을 수정하여 주시기 바랍니다."}],"처리기준미구분":[{"text":"'[수행평가명]'에서 미응시·미참여 학생과 참여했으나 최저 수행수준에 미치지 못한 학생에 대한 처리 기준이 구분되어 있지 않습니다. 미응시·미참여 학생은 0점으로 처리하고, 참여했으나 최저 수행수준에 미치지 못한 학생에게는 기본점수를 별도로 명시하여 주시기 바랍니다."}],"기본점수과다":[{"text":"'[수행평가명]'에서 최저 수행수준에 미치지 못한 학생에게 부여되는 기본점수가 과도하게 높게 설정되어 있습니다. 기본점수는 수행평가에 참여했으나 최저 수행수준에 미치지 못한 학생에게 참여에 대한 최소한의 점수로 부여하는 것이므로, 적정 수준으로 조정하여 주시기 바랍니다."}]}},"criteria":{"적절":"미응시·미참여 학생에 대한 0점 처리 기준과 참여했으나 최저 수행수준에 미치지 못한 학생에 대한 기본점수 부여 기준이 구분되어 명시되어 있다.","수정 요청":"미응시 학생 기본점수 부여, 처리 기준 미구분, 기본점수 과다 중 하나 이상에 해당한다. 해당 유형을 선택하여 구체적인 의견을 작성하세요."}},"item3_4_7_6":{"sentences":{"적절":[{"text":"수행과제의 성취수준이 성취기준에 근거하여 도달 정도를 구체적으로 진술하고 있으며, 성취수준에서 도출한 평가요소와 채점기준이 논리적으로 일관되게 연결되어 있습니다. 또한 채점기준이 평가요소의 성격(질적·양적)에 따라 적합한 방식으로 구분되어 있으며, 학생의 수행 결과를 관찰하고 즉시 판단할 수 있도록 구체적으로 기술되어 있습니다."}]}}}};
+
 async function loadLibrary() {
-  try {
-    const res = await fetch('library.json');
-    if (!res.ok) throw new Error('library.json not found');
-    LIBRARY = await res.json();
-  } catch(e) {
-    LIBRARY = getFallbackLibrary();
-  }
+  // 로컬 버전: 인라인 데이터 직접 사용 (fetch 불필요)
+  LIBRARY = LIBRARY_EMBEDDED;
 }
 
 // ───────────────────────────────────────────
@@ -417,7 +383,7 @@ let state = {
   schoolName: '',
   subjectName: '',
   perfCount: 0,
-  item1: { level: '', selectedSubtypes: [], extra: '', propose: false, proposalText: '' },
+  item1: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
   item1_1: { codes: '' },
   performances: []
 };
@@ -428,7 +394,7 @@ function getInitialState() {
     schoolName: '',
     subjectName: '',
     perfCount: 0,
-    item1: { level: '', selectedSubtypes: [], extra: '', propose: false, proposalText: '' },
+    item1: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
     item1_1: { codes: '' },
     performances: []
   };
@@ -495,27 +461,16 @@ function loadSavedData() {
     }
     // 수행평가 개수 → STEP 3 표시 + 패널 렌더
     if (state.perfCount) {
+      document.getElementById('perfCount').value = state.perfCount;
       onPerfCountChange(true);
     }
     // 항목1 판정 복원
     if (state.item1.level) {
       const r1 = document.querySelector(`input[name="item1"][value="${state.item1.level}"]`);
       if (r1) { r1.checked = true; onItem1Change(state.item1.level); }
-      // 수정 요청 유형 복원
-      if (state.item1.selectedSubtypes && state.item1.selectedSubtypes.length > 0) {
-        state.item1.selectedSubtypes.forEach(key => {
-          const cb = document.querySelector(`input[name="item1-subtype"][value="${key}"]`);
-          if (cb) cb.checked = true;
-        });
-        // 유형 선택 영역 표시 후 문장 재생성
-        const subtypeDiv = document.getElementById('item1-subtypes');
-        if (subtypeDiv) subtypeDiv.style.display = 'block';
-        onItem1SubtypeChange();
-      } else {
-        // extra 복원 (적절 판정 등)
-        const ta1 = document.getElementById('item1-extra');
-        if (ta1 && state.item1.extra) ta1.value = state.item1.extra;
-      }
+      // extra 복원
+      const ta1 = document.getElementById('item1-extra');
+      if (ta1 && state.item1.extra) ta1.value = state.item1.extra;
     }
     // 항목1-1 복원
     if (state.item1_1.codes) {
@@ -549,50 +504,29 @@ function onSchoolLevelChange(silent = false) {
 // ───────────────────────────────────────────
 // 수행평가 개수 변경
 // ───────────────────────────────────────────
-function changePerfCount(delta) {
-  const current = state.perfCount || 0;
-  const next = current + delta;
-  if (next < 1 || next > 12) return;
-  applyPerfCount(next);
-  saveData();
-}
-
-function applyPerfCount(count) {
+function onPerfCountChange(silent = false) {
+  const count = parseInt(document.getElementById('perfCount').value);
+  if (!count) return;
   state.perfCount = count;
+
+  // 기존 state 유지하면서 부족한 부분만 추가
   while (state.performances.length < count) {
     state.performances.push(createPerfState(state.performances.length));
   }
   state.performances = state.performances.slice(0, count);
 
-  // 표시 숫자 업데이트
-  const display = document.getElementById('perfCountDisplay');
-  if (display) display.textContent = count + '개';
-
-  // − 버튼 비활성화 (1개)
-  const minus = document.getElementById('perfCountMinus');
-  if (minus) minus.disabled = count <= 1;
-
-  // + 버튼 비활성화 (12개)
-  const plus = document.getElementById('perfCountPlus');
-  if (plus) plus.disabled = count >= 12;
-
   renderPerfTabs();
   renderPerfPanels();
   document.getElementById('perfItemsCard').style.display = 'block';
   document.getElementById('outputCard').style.display = 'block';
-}
 
-function onPerfCountChange(silent = false) {
-  // 하위 호환: loadSavedData에서 state.perfCount가 이미 세팅된 상태로 호출됨
-  if (!state.perfCount) return;
-  applyPerfCount(state.perfCount);
   if (!silent) saveData();
 }
 
 function createPerfState(idx) {
   return {
     name: '',
-    item2: { level: '', selectedSubtypes: [], extra: '', propose: false, proposalText: '' },
+    item2: { level: '', inputMode: 'library', extra: '', propose: false, proposalText: '' },
     item3: { level: '', inputMode: 'library', selectedSubtypes: [], blanks: {}, extra: '', propose: false, proposalText: '' },
     item4: { level: '', selectedSubtypes: [], extra: '', propose: false, proposalText: '' },
     item5: { level: '', selectedSubtypes: [], extra: '', propose: false, proposalText: '' },
@@ -606,11 +540,6 @@ function createPerfState(idx) {
 function renderPerfTabs() {
   const tabs = document.getElementById('perfTabs');
   tabs.innerHTML = '';
-  if (state.perfCount >= 6) {
-    tabs.classList.add('many-tabs');
-  } else {
-    tabs.classList.remove('many-tabs');
-  }
   for (let i = 0; i < state.perfCount; i++) {
     const btn = document.createElement('button');
     btn.className = 'perf-tab' + (i === 0 ? ' active' : '');
@@ -660,7 +589,7 @@ function renderPerfPanel(i) {
       <div class="item-body">
         <div class="extra-opinion">
           <label>기타 의견 (선택) — 위 항목에 해당하지 않는 특이사항, 권장사항 등을 자유롭게 기술하세요.</label>
-          <textarea id="perf-${i}-etc" placeholder="예) 수행평가 한 영역의 평가 비율이 정기고사 비율에 비하여 높습니다. / 평가 시기가 집중되어 있어 조정이 필요합니다." rows="3" oninput="saveData()"></textarea>
+          <textarea id="perf-${i}-etc" placeholder="예) 수행평가 배점 비율이 학교 규정과 상이합니다. / 평가 시기가 집중되어 있어 조정이 필요합니다." rows="3" oninput="saveData()"></textarea>
         </div>
       </div>
     </div>
@@ -680,50 +609,12 @@ function renderItem2(i) {
         <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="수정 권고" onchange="onPerfItemChange(${i},'item2','수정 권고')"><span class="warn">수정 권고</span></label>
         <label class="radio-btn"><input type="radio" name="perf-${i}-item2" value="수정 요청" onchange="onPerfItemChange(${i},'item2','수정 요청')"><span class="req">수정 요청</span></label>
       </div>
-      <!-- 수정 권고 유형 선택 -->
-      <div id="perf-${i}-item2-subtypes-warn" style="display:none;margin-top:8px;">
-        <div style="font-size:11px;color:var(--warn);font-weight:600;margin-bottom:8px;">수정 권고 유형 선택 (하나 선택)</div>
-        <div class="check-group" style="gap:8px;">
-          <label class="check-item" style="align-items:flex-start;background:#fffbf0;border:1px solid #f0c060;border-radius:6px;padding:8px 10px;cursor:pointer;">
-            <input type="radio" name="perf-${i}-item2-subtype" value="요소모호" onchange="onItem2SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-            <span style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:12px;font-weight:600;color:#333;">유형 ① — 평가 방법만 있고 평가 요소가 모호함</span>
-              <span style="font-size:11px;color:#888;line-height:1.5;">→ 평가 방법만 강조되어 평가 요소가 모호합니다. 성취기준과 연계된 핵심 요소를 명칭에 반영해 주시기 바랍니다.</span>
-            </span>
-          </label>
-          <label class="check-item" style="align-items:flex-start;background:#fffbf0;border:1px solid #f0c060;border-radius:6px;padding:8px 10px;cursor:pointer;">
-            <input type="radio" name="perf-${i}-item2-subtype" value="범위추상" onchange="onItem2SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-            <span style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:12px;font-weight:600;color:#333;">유형 ② — 평가 요소 범위가 너무 넓고 추상적</span>
-              <span style="font-size:11px;color:#888;line-height:1.5;">→ 평가 요소의 범위가 너무 넓고 추상적입니다. 핵심 내용이 직관적으로 드러나도록 명칭을 구체화해 주시기 바랍니다.</span>
-            </span>
-          </label>
-        </div>
-      </div>
-      <!-- 수정 요청 유형 선택 -->
-      <div id="perf-${i}-item2-subtypes-req" style="display:none;margin-top:8px;">
-        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:8px;">수정 요청 유형 선택</div>
-        <div class="check-group" style="gap:8px;">
-          <label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-            <input type="radio" name="perf-${i}-item2-subtype" value="요소없음" onchange="onItem2SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-            <span style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:12px;font-weight:600;color:#333;">유형 ① — 수행평가명에 평가 요소가 드러나지 않음</span>
-              <span style="font-size:11px;color:#888;line-height:1.5;">→ 수행평가명에 평가 요소가 드러나지 않아 무엇을 평가하는지 파악하기 어렵습니다. 평가 요소(무엇을)와 평가 방법(어떻게)이 함께 드러나도록 구성하여 주시기 바랍니다.</span>
-            </span>
-          </label>
-          <label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-            <input type="radio" name="perf-${i}-item2-subtype" value="서논술형명칭" onchange="onItem2SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-            <span style="display:flex;flex-direction:column;gap:3px;">
-              <span style="font-size:12px;font-weight:600;color:#333;">유형 ② — 서·논술형을 수행평가명으로 사용하여 평가 요소가 드러나지 않음</span>
-              <span style="font-size:11px;color:#888;line-height:1.5;">→ 서·논술형은 평가 방법이므로 수행평가명에 평가 요소도 함께 드러나야 합니다. 평가 방법란에 서술형/논술형으로 명시하고, 수행평가명은 평가 요소와 방법이 모두 드러나도록 수정하여 주시기 바랍니다. (예: 쟁점별 논증 구성과 토론 활동)</span>
-            </span>
-          </label>
-        </div>
-      </div>
+      <div id="perf-${i}-item2-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
       <div class="extra-opinion" style="margin-top:8px;">
-        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견</label>
-        <textarea id="perf-${i}-item2-extra" rows="4" placeholder="판정을 선택하면 의견이 자동으로 입력됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
+        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
+        <textarea id="perf-${i}-item2-extra" rows="4" placeholder="컨설팅 의견을 입력하거나 아래 문장 선택 버튼을 이용하세요." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
         <div style="display:flex;gap:6px;margin-top:4px;">
+          <button onclick="openSentenceModal(${i}, '2')" style="padding:3px 10px;font-size:11px;border:1px solid var(--navy);background:var(--navy-light);color:var(--navy);border-radius:4px;cursor:pointer;font-family:inherit;">📚 문장 선택</button>
           <button onclick="document.getElementById('perf-${i}-item2-extra').value='';saveData();" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
         </div>
       </div>
@@ -745,79 +636,69 @@ function renderItem2(i) {
 // ───────────────────────────────────────────
 // 항목 3 유형 라이브러리 (빈칸 없는 문장 / 빈칸 있는 문장)
 const ITEM3_TYPES = [
-  // ── 수행과제 ──
-  { key: '과제성취불일치',
-    label: '수행과제 — 성취기준과 수행과제 불일치',
-    text: "'[수행평가명]'의 수행과제가 제시된 성취기준의 평가 요소를 실질적으로 측정하기 어려운 구조입니다. 수행과제가 성취기준에서 요구하는 지식·기능·태도를 직접적으로 확인할 수 있도록 수행과제와 성취기준 간의 연계성을 전면 재검토하여 주시기 바랍니다.",
+  { key: '코드누락',
+    label: '유형 — 성취기준 코드만 작성 (진술문 누락)',
+    text: "'[수행평가명]' 평가 세부계획에 누락된 성취기준의 진술문이 제시되어 있지 않습니다. 성취기준 진술문은 수행과제 및 채점기준 설계의 출발점이 되므로, 교육과정에 제시된 성취기준 진술문을 그대로 기재하여 주시기 바랍니다.",
   },
   { key: '과다통합',
-    label: '수행과제 — 성취기준 과다 통합',
+    label: '유형 — 성취기준 과다 통합',
     text: "'[수행평가명]'에 지나치게 많은 성취기준이 하나의 수행과제로 통합되어 있어 각 성취기준에 대한 학생의 개별적 도달 정도를 정밀하게 판별하기 어렵습니다. 수행과제는 핵심 성취기준을 중심으로 구성하여 학생의 도달 정도를 변별력 있게 측정할 수 있도록 재검토하여 주시기 바랍니다.",
   },
-  // ── 성취수준 ──
   { key: '도달미반영',
-    label: '성취수준 — 도달 정도 미반영',
+    label: '유형 — 성취수준 도달 정도 미반영',
     text: "'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 적절하게 반영하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도가 구체적으로 드러나도록 성취수준을 보완하여 주시기 바랍니다.",
   },
   { key: '변별력미흡',
-    label: '성취수준 — 수준 변별력 미흡',
+    label: '유형 — 성취수준 변별력 미흡',
     text: "'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 수준별로 변별력 있게 구분하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도를 변별력 있게 구분하여 성취도를 판별할 수 있도록 보완하여 주시기 바랍니다.",
   },
   { key: '단계형식일반',
-    label: '성취수준 — 단계 형식 미준수 (일반 교과 5단계)',
+    label: '유형 — 단계 형식 미준수 (일반 교과 5단계)',
     text: "'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 5단계(A·B·C·D·E) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다.",
   },
   { key: '단계형식예체능',
-    label: '성취수준 — 단계 형식 미준수 (예체능 3단계)',
+    label: '유형 — 단계 형식 미준수 (예체능 3단계)',
     text: "'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 3단계(A·B·C) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다.",
   },
-  // ── 평가요소 ──
   { key: '평가요소연결',
-    label: '평가요소 — 성취수준과 채점기준 간 연결 미흡',
+    label: '유형 — 평가요소 연결 미흡',
     text: "'[수행평가명]'의 성취수준에서 도출한 평가요소와 채점기준의 평가요소 간 논리적 연결이 명확하지 않습니다. 성취수준에서 도출한 평가요소가 채점기준에 그대로 반영되어 있는지 상호 일치 여부를 재검토하여 주시기 바랍니다.",
   },
-  // ── 채점기준 ──
+  { key: '과제성취불일치',
+    label: '유형 — 수행과제·성취기준 불일치',
+    text: "'[수행평가명]'의 수행과제가 제시된 성취기준의 핵심 내용을 실질적으로 측정하기 어려운 구조입니다. 수행과제와 성취기준 간의 연계성을 전면 재검토하여 주시기 바랍니다.",
+  },
   { key: '총체적채점',
-    label: '채점기준 — 분석적 채점기준 미적용 (총체적 평가)',
+    label: '유형 — 부적절한 총체적 채점기준',
     text: "'[수행평가명]'의 수행과제는 평가요소별 수행 수준을 구분하는 분석적 채점기준이 적합하나, 평가요소별 구분 없이 전체적인 인상으로 판단하는 총체적 채점기준으로 구성되어 있습니다. 평가요소별로 수행 수준의 차이가 드러나는 분석적 채점기준으로 재구성하여 주시기 바랍니다.",
   },
   { key: '질적양적',
-    label: '채점기준 — 질적 수행수준을 양적 기준으로만 처리',
+    label: '유형 — 질적 평가요소의 양적 처리',
     text: "'[수행평가명]'의 채점기준이 질적 수준으로 구분되어야 하는 평가요소임에도 포함 요소의 개수·횟수 등 양적 기준으로만 처리되어 있어 수행 수준의 질적 차이를 판별하기 어렵습니다. 평가요소의 성격에 맞게 질적 수준이 드러나도록 채점기준을 수정하여 주시기 바랍니다.",
   },
   { key: '추상표현',
-    label: '채점기준 — 추상적·주관적 표현으로 채점 불가',
+    label: '유형 — 채점기준 추상적·주관적 표현',
     text: "'[수행평가명]'의 채점기준이 관찰 가능한 행동 수준이 아닌 추상적·주관적 표현으로 기술되어 있어 채점자 간 일관된 점수 부여가 어렵습니다. 학생의 수행 결과를 직접 관찰하고 즉시 판단할 수 있는 구체적인 행동 수준으로 채점기준을 수정하여 주시기 바랍니다.",
+  },
+  { key: '개수형',
+    label: '유형 — 개수형 채점기준',
+    text: "'[수행평가명]'의 채점기준이 포함 요소의 개수로만 수행 수준을 구분하고 있어 수행의 질적 차이가 반영되지 않습니다. 또한 학생이 정답 항목을 사전에 유추할 수 있어 암기 유도의 가능성이 있습니다. 수행의 질적 차이가 드러나도록 채점기준을 수정하여 주시기 바랍니다.",
+  },
+  { key: '복합',
+    label: '유형 — 복합 사유 (2가지 이상)',
+    text: "'[수행평가명]'에서 위에 제시된 사유들이 복합적으로 나타나 평가 세부계획의 전반적인 재구성이 필요합니다. 성취기준에서 출발하여 성취수준·평가요소·채점기준이 논리적으로 연결되도록 전면 재검토하여 주시기 바랍니다.",
   },
 ];
 
-// 전면 재검토 조건 판단
-function needsFullReview(checked) {
-  const has = key => checked.includes(key);
-  return (
-    has('과제성취불일치') ||
-    (has('도달미반영') && has('평가요소연결')) ||
-    (has('도달미반영') && has('총체적채점')) ||
-    (has('도달미반영') && has('변별력미흡') && has('평가요소연결')) ||
-    checked.length >= 4
-  );
-}
-
 function renderItem3(i) {
   const subtypeChecks3req = ITEM3_TYPES.map(s =>
-    `<label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-      <input type="checkbox" name="perf-${i}-item3-subtype" value="${s.key}" onchange="on3SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-      <span style="display:flex;flex-direction:column;gap:3px;">
-        <span style="font-size:12px;font-weight:600;color:#333;">${s.label}</span>
-        <span style="font-size:11px;color:#888;line-height:1.5;">→ ${s.text.replace(/'/g,"&#39;")}</span>
-      </span>
-    </label>`
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item3-subtype" value="${s.key}" onchange="on3SubtypeChange(${i})"><span>${s.label}</span></label>`
   ).join('');
 
   return `
   <div class="item-section">
     <div class="item-title">
-      항목 3 &nbsp;|&nbsp; 수행과제가 성취기준 도달 여부를 측정하도록 설계되었는지 여부 확인
+      수행과제가 성취기준 도달 여부를 측정하도록 설계되었는지 여부 확인
       <span style="display:block;font-size:11px;font-weight:400;margin-top:2px;">– 성취기준·성취수준·평가요소·채점기준의 정합성 확인</span>
       <span class="core-badge">★ 성취평가제 핵심</span>
     </div>
@@ -827,12 +708,8 @@ function renderItem3(i) {
         <label class="radio-btn"><input type="radio" name="perf-${i}-item3" value="수정 요청" onchange="onPerfItemChange(${i},'item3','수정 요청')"><span class="req">수정 요청</span></label>
       </div>
       <div id="perf-${i}-item3-subtypes-req" style="display:none;">
-        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:4px;">해당 유형 선택 (복수 선택 가능)</div>
-        <div style="font-size:11px;color:var(--gray);margin-bottom:8px;">수행과제 → 성취수준 → 평가요소 → 채점기준 순서로 검토하세요.</div>
-        <div class="check-group" style="gap:8px;">${subtypeChecks3req}</div>
-        <div id="perf-${i}-item3-review-badge" style="display:none;background:#fff3e0;border-left:3px solid #e65100;border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:12px;color:#e65100;font-weight:600;">
-          ⚠️ 전면 재검토 조건 해당 — 컨설팅 의견에 재검토 요청 문구가 자동으로 추가됩니다.
-        </div>
+        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
+        <div class="check-group">${subtypeChecks3req}</div>
         <div id="perf-${i}-item3-sentence-cards" style="margin-top:10px;"></div>
       </div>
       <div class="extra-opinion" style="margin-top:10px;">
@@ -860,44 +737,35 @@ function renderItem3(i) {
 // 항목 4 렌더
 // ───────────────────────────────────────────
 const ITEM4_TYPES = [
-  // ── 암기형 ──
   { key: '서논술암기형',
-    label: '암기형 — 서·논술형이나 사고 과정 없이 암기 재현',
+    label: '유형 — 서·논술형 암기형',
     text: "'[수행평가명]'은 서·논술형 평가로 계획되어 있으나, 탐구·분석·적용 등 사고 과정 없이 교과서 개념·공식·용어 등을 그대로 재현하거나 정해진 답을 서술하는 암기형으로 운영될 가능성이 높습니다. 성취기준에서 요구하는 사고 과정과 수행 역량이 드러날 수 있는 방식으로 수행과제를 재설계하여 주시기 바랍니다.",
   },
-  { key: '서논술시험형',
-    label: '암기형 — 서·논술형을 사전 범위 공개 후 시험형 운영',
-    text: "'[수행평가명]'은 서·논술형 수행평가로 계획되어 있으나, 채점기준표를 사전에 공개하지 않는 대신 평가 범위나 문항을 미리 안내하는 방식은 먼저 평가를 치른 학급에서 정답이 유출되거나 과도한 사전 암기를 유발할 수 있어 수행평가의 공정성과 신뢰성을 저해합니다. 결과 중심의 지식 확인은 정기고사를 통해 평가하고, 수행평가는 교사의 관찰 하에 학생의 학습 과정과 수행 역량이 직접 확인될 수 있도록 평가 방식을 재검토하여 주시기 바랍니다.",
-  },
-  { key: '채점암기유도',
-    label: '암기형 — 채점기준에 정답 범위 명시로 사전 암기 유도',
-    text: "'[수행평가명]'의 채점기준에 정답의 개수·항목 수가 명시되어 있거나 교과서의 특정 개념·용어·내용을 그대로 서술하도록 요구하고 있어 사전 암기를 유도할 가능성이 있습니다. 학생의 사고 과정과 수행 역량의 질적 수준이 드러날 수 있도록 채점기준을 수정하여 주시기 바랍니다.",
-  },
-  // ── 과제형 ──
   { key: '과제형완성',
-    label: '과제형 — 수업 중 완성 어려운 분량·내용',
+    label: '유형 — 과제형 (수업 중 완성 어려움)',
     text: "'[수행평가명]'에 수업 중 완성하기 어려운 평가 요소가 포함되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 완성 가능한 범위와 방식으로 평가계획을 조정하여 주시기 바랍니다.",
   },
   { key: '과제형제출',
-    label: '과제형 — 평가계획서에 제출 기한 명시',
+    label: '유형 — 과제형 (제출 기한 명시)',
     text: "'[수행평가명]'의 평가계획서에 제출 기한이 명시되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 수행 가능한 방식으로 계획을 수정하여 주시기 바랍니다.",
   },
-  // ── AI 대리 수행 ──
   { key: 'AI대리수행',
-    label: 'AI 대리 수행 — 생성형 AI 활용 대체 가능 구조',
+    label: '유형 — AI 대리 수행 가능',
     text: "'[수행평가명]'은 조사·분석·글쓰기 등 생성형 AI를 활용한 대리 수행 가능성을 배제하기 어려운 구조입니다. 평가의 공정성과 신뢰성을 확보하기 위해 평가계획서에 AI 활용 조건·제한·유의사항을 구체적으로 명시하여 주시기 바랍니다.",
+  },
+  { key: '채점암기유도',
+    label: '유형 — 채점기준 암기 유도',
+    text: "'[수행평가명]'의 채점기준에 정답의 개수·항목 수가 명시되어 있거나 교과서의 특정 개념·용어·내용을 그대로 서술하도록 요구하고 있어 사전 암기를 유도할 가능성이 있습니다. 학생의 사고 과정과 수행 역량의 질적 수준이 드러날 수 있도록 채점기준을 수정하여 주시기 바랍니다.",
+  },
+  { key: '채점기준표미제시',
+    label: '유형 — 채점기준표 미제시·암기형',
+    text: "'[수행평가명]'의 평가계획서에 채점기준표가 제시되어 있지 않으며, 채점기준의 내용이 정답을 암시하는 구조로 구성되어 있어 사전에 문항이나 정답 범위를 공개하는 방식의 암기형 평가로 운영될 가능성이 높습니다. 성취평가제의 취지에 부합하는 수행평가로 개선하여 주시기 바랍니다.",
   },
 ];
 
 function renderItem4(i) {
   const subtypeChecks4 = ITEM4_TYPES.map(s =>
-    `<label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-      <input type="checkbox" name="perf-${i}-item4-subtype" value="${s.key}" onchange="on4SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-      <span style="display:flex;flex-direction:column;gap:3px;">
-        <span style="font-size:12px;font-weight:600;color:#333;">${s.label}</span>
-        <span style="font-size:11px;color:#888;line-height:1.5;">→ ${s.text.replace(/'/g,"&#39;")}</span>
-      </span>
-    </label>`
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item4-subtype" value="${s.key}" onchange="on4SubtypeChange(${i})"><span>${s.label}</span></label>`
   ).join('');
 
   return `
@@ -910,7 +778,7 @@ function renderItem4(i) {
       </div>
       <div id="perf-${i}-item4-subtypes" style="display:none;">
         <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
-        <div class="check-group" style="gap:8px;">${subtypeChecks4}</div>
+        <div class="check-group">${subtypeChecks4}</div>
         <div id="perf-${i}-item4-sentence-cards" style="margin-top:10px;"></div>
       </div>
       <div class="extra-opinion" style="margin-top:10px;">
@@ -939,28 +807,22 @@ function renderItem4(i) {
 // ───────────────────────────────────────────
 const ITEM5_TYPES = [
   { key: '미응시기본점수',
-    label: '유형 — 미응시·미참여 학생에게 기본점수를 부여함',
+    label: '유형 — 미응시·미참여 학생에게 기본점수 부여 명시',
     text: "'[수행평가명]'에서 미응시·미참여 학생에게 기본점수를 부여하도록 명시되어 있습니다. 학업성적관리규정에 따라 수행평가에 참여하지 않은 학생은 0점으로 처리하여야 하므로, 해당 조항을 수정하여 주시기 바랍니다.",
   },
   { key: '처리기준미구분',
-    label: '유형 — 미응시 0점·기본점수 부여 대상을 구분하지 않음',
+    label: '유형 — 미응시 학생과 최저 수행수준 미달 학생의 처리 기준 미구분',
     text: "'[수행평가명]'에서 미응시·미참여 학생과 참여했으나 최저 수행수준에 미치지 못한 학생에 대한 처리 기준이 구분되어 있지 않습니다. 미응시·미참여 학생은 0점으로 처리하고, 참여했으나 최저 수행수준에 미치지 못한 학생에게는 기본점수를 별도로 명시하여 주시기 바랍니다.",
   },
   { key: '기본점수과다',
-    label: '유형 — 최저 수행수준 미달 학생의 기본점수가 과도하게 높음',
+    label: '유형 — 기본점수 과다',
     text: "'[수행평가명]'에서 최저 수행수준에 미치지 못한 학생에게 부여되는 기본점수가 과도하게 높게 설정되어 있습니다. 기본점수는 수행평가에 참여했으나 최저 수행수준에 미치지 못한 학생에게 참여에 대한 최소한의 점수로 부여하는 것이므로, 적정 수준으로 조정하여 주시기 바랍니다.",
   },
 ];
 
 function renderItem5(i) {
   const subtypeChecks5 = ITEM5_TYPES.map(s =>
-    `<label class="check-item" style="align-items:flex-start;background:#fff8f8;border:1px solid #f5c6c6;border-radius:6px;padding:8px 10px;cursor:pointer;">
-      <input type="checkbox" name="perf-${i}-item5-subtype" value="${s.key}" onchange="on5SubtypeChange(${i})" style="margin-top:3px;flex-shrink:0;">
-      <span style="display:flex;flex-direction:column;gap:3px;">
-        <span style="font-size:12px;font-weight:600;color:#333;">${s.label}</span>
-        <span style="font-size:11px;color:#888;line-height:1.5;">→ ${s.text.replace(/'/g,"&#39;")}</span>
-      </span>
-    </label>`
+    `<label class="check-item"><input type="checkbox" name="perf-${i}-item5-subtype" value="${s.key}" onchange="on5SubtypeChange(${i})"><span>${s.label}</span></label>`
   ).join('');
 
   return `
@@ -970,34 +832,28 @@ function renderItem5(i) {
       <div class="radio-group">
         <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="적절" onchange="onPerfItemChange(${i},'item5','적절')"><span class="ok">적절</span></label>
         <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="수정 요청" onchange="onPerfItemChange(${i},'item5','수정 요청')"><span class="req">수정 요청</span></label>
-        <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="자유학기제" onchange="onPerfItemChange(${i},'item5','자유학기제')"><span class="skip">자유학기제 제외</span></label>
       </div>
-      <div id="perf-${i}-item5-content">
-        <div id="perf-${i}-item5-subtypes" style="display:none;">
-          <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
-          <div class="check-group" style="gap:8px;">${subtypeChecks5}</div>
-          <div id="perf-${i}-item5-sentence-cards" style="margin-top:10px;"></div>
-        </div>
-        <div class="extra-opinion" style="margin-top:10px;">
-        <div id="perf-${i}-item5-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
-          <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
-          <textarea id="perf-${i}-item5-extra" rows="4" placeholder="위에서 유형을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
-          <div style="display:flex;gap:6px;margin-top:4px;">
-            <button onclick="clearItem5Text(${i})" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
-          </div>
-        </div>
-        <div class="proposal-area" style="margin-top:8px;">
-          <label class="proposal-check">
-            <input type="checkbox" id="perf-${i}-item5-propose" onchange="toggleProposal('perf-${i}-item5')">
-            <span>📌 라이브러리에 추가 제안</span>
-          </label>
-          <div class="proposal-input" id="perf-${i}-item5-proposal-input">
-            <textarea placeholder="제안할 표준 문장을 입력하세요." id="perf-${i}-item5-proposal-text" oninput="saveData()"></textarea>
-          </div>
+      <div id="perf-${i}-item5-subtypes" style="display:none;">
+        <div style="font-size:11px;color:var(--req);font-weight:600;margin-bottom:6px;">해당 유형 선택 (복수 선택 가능)</div>
+        <div class="check-group">${subtypeChecks5}</div>
+        <div id="perf-${i}-item5-sentence-cards" style="margin-top:10px;"></div>
+      </div>
+      <div class="extra-opinion" style="margin-top:10px;">
+      <div id="perf-${i}-item5-criteria-box" style="display:none;background:#f0f4ff;border-left:3px solid var(--navy);border-radius:0 4px 4px 0;padding:8px 12px;margin-top:10px;font-size:11px;color:#333;line-height:1.6;"></div>
+        <label style="font-size:11px;color:var(--gray);font-weight:600;">✏️ 컨설팅 의견 (직접 입력 또는 문장 선택)</label>
+        <textarea id="perf-${i}-item5-extra" rows="4" placeholder="위에서 유형을 선택하면 문장이 자동으로 삽입됩니다." oninput="saveData()" style="width:100%;border:1px solid var(--border);border-radius:4px;padding:8px;font-size:12px;font-family:inherit;resize:vertical;line-height:1.7;"></textarea>
+        <div style="display:flex;gap:6px;margin-top:4px;">
+          <button onclick="clearItem5Text(${i})" style="padding:3px 10px;font-size:11px;border:1px solid var(--border);background:white;color:var(--gray);border-radius:4px;cursor:pointer;font-family:inherit;">🗑 초기화</button>
         </div>
       </div>
-      <div id="perf-${i}-item5-freeperiod-notice" style="display:none;background:#e8e8e8;border-left:3px solid #888;border-radius:0 4px 4px 0;padding:10px 14px;margin-top:6px;font-size:12px;color:#444;font-weight:600;">
-        ✅ 자유학기제 과목 — 항목 5 검토 제외됨 (점수 평가 미적용 과목)
+      <div class="proposal-area" style="margin-top:8px;">
+        <label class="proposal-check">
+          <input type="checkbox" id="perf-${i}-item5-propose" onchange="toggleProposal('perf-${i}-item5')">
+          <span>📌 라이브러리에 추가 제안</span>
+        </label>
+        <div class="proposal-input" id="perf-${i}-item5-proposal-input">
+          <textarea placeholder="제안할 표준 문장을 입력하세요." id="perf-${i}-item5-proposal-text" oninput="saveData()"></textarea>
+        </div>
       </div>
     </div>
   </div>`;
@@ -1006,44 +862,25 @@ function renderItem5(i) {
 // ───────────────────────────────────────────
 // 이벤트 핸들러
 // ───────────────────────────────────────────
-// 항목 1 유형 정의는 library.json에서 로딩 (LIBRARY.items.item1.sentences['수정 요청'])
-
 function onItem1Change(level) {
   state.item1.level = level;
-  state.item1.selectedSubtypes = [];
 
-  // 수정 요청 → 유형 선택 영역 표시, 적절 → 숨김
-  const subtypeDiv = document.getElementById('item1-subtypes');
-  if (subtypeDiv) subtypeDiv.style.display = level === '수정 요청' ? 'block' : 'none';
-
-  // 유형 체크박스 초기화
-  document.querySelectorAll('input[name="item1-subtype"]').forEach(cb => cb.checked = false);
-
-  // 적절 → 라이브러리 문장 자동 삽입 / 수정 요청 → 유형 선택 유도
-  const ta = document.getElementById('item1-extra');
-  if (level === '적절') {
-    const lib = LIBRARY?.items?.item1;
-    const text = lib?.sentences?.['적절']?.[0]?.text || '';
-    state.item1.extra = text;
-    if (ta) ta.value = text;
-  } else {
-    state.item1.extra = '';
-    if (ta) { ta.value = ''; ta.placeholder = '위에서 유형을 선택하면 의견이 자동으로 입력됩니다.'; }
+  // 판정 기준 표시 (참고용 — 출력 안 함)
+  const criteriaText = LIBRARY?.items?.item1?.criteria?.[level] || '';
+  const cBox = document.getElementById('item1-criteria-box');
+  if (cBox) {
+    cBox.textContent = criteriaText;
+    cBox.style.display = criteriaText ? 'block' : 'none';
   }
 
-  saveData();
-}
-
-function onItem1SubtypeChange() {
-  // 선택된 체크박스 모두 수집
-  const checked = Array.from(document.querySelectorAll('input[name="item1-subtype"]:checked')).map(cb => cb.value);
-  state.item1.selectedSubtypes = checked;
-  // library.json에서 유형별 문장 조회 후 합산
-  const subtypeLib = LIBRARY?.items?.item1?.sentences?.['수정 요청'] || {};
-  const text = checked.map(key => subtypeLib[key]?.[0]?.text || '').filter(Boolean).join('\n');
+  // 적절/수정 요청 → 라이브러리 문장 자동 삽입
+  const lib = LIBRARY?.items?.item1;
+  const sent = lib?.sentences?.[level]?.[0];
+  const text = sent ? sent.text : '';
   state.item1.extra = text;
   const ta = document.getElementById('item1-extra');
   if (ta) ta.value = text;
+
   saveData();
 }
 
@@ -1067,42 +904,7 @@ function onPerfItemChange(perfIdx, itemKey, level) {
   const perf = state.performances[perfIdx];
   const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
 
-  // ── 항목5 자유학기제 처리 ──
-  if (itemKey === 'item5') {
-    const isFree = level === '자유학기제';
-    perf.item5.freeperiod = isFree;
-    const contentDiv = document.getElementById(`perf-${perfIdx}-item5-content`);
-    const noticeDiv  = document.getElementById(`perf-${perfIdx}-item5-freeperiod-notice`);
-    if (contentDiv) contentDiv.style.display = isFree ? 'none' : '';
-    if (noticeDiv)  noticeDiv.style.display  = isFree ? 'block' : 'none';
-    if (isFree) {
-      perf.item5.extra = '';
-      perf.item5.selectedSubtypes = [];
-      const ta = document.getElementById(`perf-${perfIdx}-item5-extra`);
-      if (ta) ta.value = '';
-      saveData();
-      return;
-    }
-  }
-
   // 서브타입 패널 표시/숨김 + textarea 초기화
-  if (itemKey === 'item2') {
-    const warnDiv = document.getElementById(`perf-${perfIdx}-item2-subtypes-warn`);
-    const reqDiv  = document.getElementById(`perf-${perfIdx}-item2-subtypes-req`);
-    if (warnDiv) warnDiv.style.display = level === '수정 권고' ? 'block' : 'none';
-    if (reqDiv)  reqDiv.style.display  = level === '수정 요청' ? 'block' : 'none';
-    document.querySelectorAll(`input[name="perf-${perfIdx}-item2-subtype"]`).forEach(r => r.checked = false);
-    perf.item2.selectedSubtypes = [];
-    const ta2 = document.getElementById(`perf-${perfIdx}-item2-extra`);
-    if (level === '적절') {
-      const text = (LIBRARY?.items?.item2?.sentences?.['적절']?.[0]?.text || '').replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
-      if (ta2) ta2.value = text;
-      perf.item2.extra = text;
-    } else {
-      if (ta2) { ta2.value = ''; ta2.placeholder = '위에서 유형을 선택하면 의견이 자동으로 입력됩니다.'; }
-      perf.item2.extra = '';
-    }
-  }
   if (itemKey === 'item3') {
     const p = document.getElementById(`perf-${perfIdx}-item3-subtypes-req`);
     if (p) p.style.display = level === '수정 요청' ? 'block' : 'none';
@@ -1138,9 +940,30 @@ function onPerfItemChange(perfIdx, itemKey, level) {
       const text = okText.replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
       ta.value = text;
       perf[itemKey].extra = text;
-    } else if (level === '수정 권고' || level === '수정 요청') {
-      // item2는 유형 선택으로 처리, item3·4·5는 유형 선택으로 채워지므로 초기화
-      if (itemKey !== 'item2') {
+    } else if (level === '수정 권고') {
+      // item2 수정 권고
+      const libData = LIBRARY?.items?.[itemKey]?.sentences?.['수정 권고'];
+      const sent = Array.isArray(libData) ? libData[0] : null;
+      if (sent) {
+        let text = sent.text;
+        if (sent.blanks) sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
+        text = text.replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
+        ta.value = text;
+        perf[itemKey].extra = text;
+      }
+    } else if (level === '수정 요청') {
+      // 수정 요청: item2는 첫 문장 삽입, item3·4·5는 유형 선택으로 채워지므로 초기화
+      if (itemKey === 'item2') {
+        const libData = LIBRARY?.items?.item2?.sentences?.['수정 요청'];
+        const sent = Array.isArray(libData) ? libData[0] : null;
+        if (sent) {
+          let text = sent.text;
+          if (sent.blanks) sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
+          text = text.replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
+          ta.value = text;
+          perf[itemKey].extra = text;
+        }
+      } else {
         ta.value = '';
         perf[itemKey].extra = '';
       }
@@ -1151,72 +974,25 @@ function onPerfItemChange(perfIdx, itemKey, level) {
 }
 
 
-function onItem2SubtypeChange(perfIdx) {
-  const selected = document.querySelector(`input[name="perf-${perfIdx}-item2-subtype"]:checked`);
-  const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
-  const ta = document.getElementById(`perf-${perfIdx}-item2-extra`);
-  if (!selected) return;
-
-  const key = selected.value;
-  // 수정 권고 유형: 요소모호, 범위추상 → library.json 수정 권고 배열에서 인덱스로 조회
-  const warnSents = LIBRARY?.items?.item2?.sentences?.['수정 권고'];
-  const reqSents  = LIBRARY?.items?.item2?.sentences?.['수정 요청'];
-
-  let sent = null;
-  if (key === '요소모호' && Array.isArray(warnSents)) sent = warnSents[0];
-  else if (key === '범위추상' && Array.isArray(warnSents)) sent = warnSents[1];
-  else if (key === '요소없음') {
-    const s = LIBRARY?.items?.item2?.sentences?.['수정 요청'];
-    sent = Array.isArray(s) ? s[0] : s?.['요소없음']?.[0] || null;
-  }
-  else if (key === '서논술형명칭') {
-    const s = LIBRARY?.items?.item2?.sentences?.['수정 요청'];
-    sent = Array.isArray(s) ? null : s?.['서논술형명칭']?.[0] || null;
-    // fallback: 하드코딩
-    if (!sent) sent = { text: "'[수행평가명]'은 서·논술형 평가 방법을 수행평가명으로 사용하고 있습니다. 서·논술형은 수행평가의 방법 중 하나이므로 수행평가명에는 평가 요소(무엇을 평가하는가)가 함께 드러나야 합니다. 예시와 같이 평가 요소와 평가 방법이 모두 드러나도록 수행평가명을 수정하고, 평가 방법란에 서술형 또는 논술형으로 명시하여 주시기 바랍니다. (예: 쟁점별 논증 구성과 토론 활동)" };
-  }
-
-  if (sent) {
-    let text = sent.text;
-    if (sent.blanks) sent.blanks.forEach(b => { text = text.replace(`{{${b}}}`, `[${b}]`); });
-    text = text.replace(/\[수행평가명\]/g, perfName).replace(/{{수행평가명}}/g, perfName);
-    if (ta) ta.value = text;
-    state.performances[perfIdx].item2.extra = text;
-    state.performances[perfIdx].item2.selectedSubtypes = [key];
-  }
-  saveData();
-}
-
 function on3SubtypeChange(perfIdx) {
   const checked = Array.from(document.querySelectorAll(`input[name="perf-${perfIdx}-item3-subtype"]:checked`)).map(c => c.value);
   const cardsDiv = document.getElementById(`perf-${perfIdx}-item3-sentence-cards`);
   const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
   const ta = document.getElementById(`perf-${perfIdx}-item3-extra`);
 
-  // 선택된 유형의 문장을 누적 삽입
+  // 선택된 유형의 문장을 textarea에 누적 삽입
   const texts = checked.map(key => {
-    // ITEM3_TYPES에서 먼저 조회 (fallback 포함), library.json 우선
     const sents = LIBRARY?.items?.item3?.sentences?.['수정 요청']?.[key];
-    const fallbackType = ITEM3_TYPES.find(t => t.key === key);
-    const raw = sents?.[0]?.text || fallbackType?.text || '';
-    return raw.replace(/\[수행평가명\]/g, perfName);
+    if (!sents || !sents[0]) return '';
+    return sents[0].text.replace(/\[수행평가명\]/g, perfName);
   }).filter(Boolean);
-
-  // 전면 재검토 문구 자동 추가
-  if (checked.length > 0 && needsFullReview(checked)) {
-    texts.push('위와 같은 사유가 확인되므로, 성취기준 선정 단계부터 성취수준·평가요소·채점기준이 논리적으로 연결되도록 평가 세부계획 전반을 재검토하여 주시기 바랍니다.');
-  }
 
   if (ta) {
     ta.value = texts.join('\n\n');
     ta.dispatchEvent(new Event('input', { bubbles: true }));
   }
 
-  // 전면재검토 표시 배지
-  const badge = document.getElementById(`perf-${perfIdx}-item3-review-badge`);
-  if (badge) badge.style.display = (checked.length > 0 && needsFullReview(checked)) ? 'block' : 'none';
-
-  // 카드 영역 숨김
+  // 카드 영역은 숨김
   if (cardsDiv) cardsDiv.innerHTML = '';
 
   saveData();
@@ -1605,69 +1381,97 @@ function collectProposals() {
 }
 
 // ───────────────────────────────────────────
-// 라이브러리 제안 제출 (Google Forms prefill)
+// 라이브러리 제안 제출 (GitHub Issues)
 // ───────────────────────────────────────────
-const FORMS_BASE = 'https://docs.google.com/forms/d/e/1FAIpQLSczyqH_hbtbRG_HheAETMQ3_aUMZXxval0A3w2SgsF40JY-kg/viewform';
-const FORMS_ENTRY = {
-  school:   'entry.1155998540',
-  subject:  'entry.2086330401',
-  item:     'entry.479656387',
-  level:    'entry.1061544431',
-  sentence: 'entry.281024575'
-};
+function saveProposalConfig() {
+  const cfg = {
+    user: document.getElementById('proposalGithubUser').value,
+    repo: document.getElementById('proposalGithubRepo').value,
+  };
+  localStorage.setItem('proposal-config', JSON.stringify(cfg));
+}
 
-function saveProposalConfig() {}
-function loadProposalConfig() {}
-
-function showProposalCard() {
-  const proposals = collectProposals();
-  const card = document.getElementById('proposalCard');
-  if (proposals.length > 0) {
-    const listDiv = document.getElementById('proposalList');
-    if (listDiv) {
-      listDiv.innerHTML = proposals.map((p, i) => `
-        <div style="background:#f9f9f9;border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin-bottom:8px;font-size:12px;">
-          <div style="font-weight:600;color:var(--navy);margin-bottom:4px;">${i+1}. [${p.item}] <span style="color:var(--gray);font-weight:400;">${p.level || ''}</span></div>
-          <div style="line-height:1.6;color:#333;">${p.text}</div>
-        </div>`).join('');
-    }
-    card.style.display = 'block';
-    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  } else {
-    card.style.display = 'none';
+function loadProposalConfig() {
+  const saved = localStorage.getItem('proposal-config');
+  if (saved) {
+    try {
+      const c = JSON.parse(saved);
+      document.getElementById('proposalGithubUser').value = c.user || '';
+      document.getElementById('proposalGithubRepo').value = c.repo || '';
+    } catch(e) {}
   }
 }
 
-function submitProposals() {
+function showProposalCard() {
+  // 로컬 버전: 라이브러리 제안 전송 기능 비활성화 (GitHub 연결 없음)
+}
+
+async function submitProposals() {
   const proposals = collectProposals();
   if (proposals.length === 0) { alert('제안된 내용이 없습니다.'); return; }
 
-  const school  = state.schoolName  || '○○학교';
-  const subject = state.subjectName || '해당 과목';
+  const user = document.getElementById('proposalGithubUser').value.trim();
+  const repo = document.getElementById('proposalGithubRepo').value.trim();
+  const token = document.getElementById('proposalGithubToken').value.trim();
   const statusDiv = document.getElementById('proposalStatus');
 
-  proposals.forEach((p, idx) => {
-    const params = new URLSearchParams();
-    params.set(FORMS_ENTRY.school,   school);
-    params.set(FORMS_ENTRY.subject,  subject);
-    params.set(FORMS_ENTRY.item,     p.item);
-    params.set(FORMS_ENTRY.level,    p.level || '');
-    params.set(FORMS_ENTRY.sentence, p.text);
-    params.set('usp', 'pp_url');
-    const url = FORMS_BASE + '?' + params.toString();
-    setTimeout(() => window.open(url, '_blank'), idx * 500);
-  });
+  if (!user || !repo || !token) {
+    statusDiv.style.display = 'block';
+    statusDiv.style.background = '#fdecea';
+    statusDiv.style.color = '#a32d2d';
+    statusDiv.textContent = 'GitHub 사용자명, Repository, Token을 모두 입력해 주세요.';
+    return;
+  }
+
+  const school = state.schoolName || '○○학교';
+  const subject = state.subjectName || '해당 과목';
+  const date = state.reviewDate || new Date().toISOString().split('T')[0];
+
+  let successCount = 0;
+  let failCount = 0;
 
   statusDiv.style.display = 'block';
-  statusDiv.style.background = '#e8f5e9';
-  statusDiv.style.color = '#1d6a3a';
-  statusDiv.textContent = `✅ ${proposals.length}개의 Google Forms가 열렸습니다. 각 탭에서 제출 버튼을 눌러 주세요.`;
+  statusDiv.style.background = '#e8f0f8';
+  statusDiv.style.color = '#1a3d6b';
+  statusDiv.textContent = `${proposals.length}개 제안을 전송 중입니다...`;
 
-  document.querySelectorAll('input[id$="-propose"]').forEach(cb => {
-    cb.checked = false;
-    toggleProposal(cb.id.replace('-propose', ''));
-  });
+  for (const proposal of proposals) {
+    const title = `[라이브러리 제안] ${proposal.item} — ${school} ${subject}`;
+    const body = `## 라이브러리 추가 제안\n\n**항목**: ${proposal.item}\n**학교**: ${school}\n**과목**: ${subject}\n**검토일**: ${date}\n\n### 제안 문장\n\n${proposal.text}\n\n---\n*이 이슈는 평가계획서 서면 컨설팅 시스템에서 자동 생성되었습니다.*`;
+
+    try {
+      const res = await fetch(`https://api.github.com/repos/${user}/${repo}/issues`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, body, labels: ['라이브러리 제안'] })
+      });
+      if (res.ok) successCount++;
+      else failCount++;
+    } catch(e) {
+      failCount++;
+    }
+  }
+
+  if (successCount > 0 && failCount === 0) {
+    statusDiv.style.background = '#e8f5e9';
+    statusDiv.style.color = '#1d6a3a';
+    statusDiv.textContent = `✅ ${successCount}개 제안이 관리자에게 전송되었습니다.`;
+    // 제안 체크박스 초기화
+    document.querySelectorAll('input[id$="-propose"]').forEach(cb => {
+      cb.checked = false;
+      toggleProposal(cb.id.replace('-propose', ''));
+    });
+  } else if (failCount > 0) {
+    statusDiv.style.background = '#fdecea';
+    statusDiv.style.color = '#a32d2d';
+    statusDiv.textContent = `성공 ${successCount}개 / 실패 ${failCount}개. Token 또는 Repository 이름을 확인해 주세요.`;
+  }
 }
+
 // ───────────────────────────────────────────
 // 임시저장 / 불러오기 / 새과목
 // ───────────────────────────────────────────
@@ -1960,10 +1764,7 @@ async function downloadDocx() {
     }
 
     // 항목 5
-    if (perf.item5.level === '자유학기제') {
-      body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
-      body += makePara('점검 의견: 해당 없음 (자유학기제 과목 — 점수 평가 미적용)', { bold:true, color:'666666', indent:200 });
-    } else if (perf.item5.level) {
+    if (perf.item5.level) {
       body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
       body += makePara(`점검 의견: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level), indent:200 });
       if (perf.item5.level === '적절') {
@@ -2083,15 +1884,6 @@ function restorePerfValues() {
     if (perf.item2.level) {
       const radio = document.querySelector(`input[name="perf-${i}-item2"][value="${perf.item2.level}"]`);
       if (radio) { radio.checked = true; onPerfItemChange(i, 'item2', perf.item2.level); }
-      // 유형 복원
-      if (perf.item2.selectedSubtypes?.length > 0) {
-        const key = perf.item2.selectedSubtypes[0];
-        const rb = document.querySelector(`input[name="perf-${i}-item2-subtype"][value="${key}"]`);
-        if (rb) { rb.checked = true; onItem2SubtypeChange(i); }
-      } else if (perf.item2.extra) {
-        const ta = document.getElementById(`perf-${i}-item2-extra`);
-        if (ta) ta.value = perf.item2.extra;
-      }
     }
     if (perf.item3.level) {
       const radio = document.querySelector(`input[name="perf-${i}-item3"][value="${perf.item3.level}"]`);
@@ -2124,12 +1916,6 @@ function restorePerfValues() {
       }
     }
     if (perf.item5.level) {
-      if (perf.item5.level === '자유학기제') {
-        const contentDiv = document.getElementById(`perf-${i}-item5-content`);
-        const noticeDiv  = document.getElementById(`perf-${i}-item5-freeperiod-notice`);
-        if (contentDiv) contentDiv.style.display = 'none';
-        if (noticeDiv)  noticeDiv.style.display  = 'block';
-      }
       const radio = document.querySelector(`input[name="perf-${i}-item5"][value="${perf.item5.level}"]`);
       if (radio) {
         radio.checked = true;
@@ -2168,12 +1954,7 @@ function getFallbackLibrary() {
         },
         sentences: {
           '적절': [{text:'교수·학습 및 평가 방법과 평가 세부계획의 성취기준 코드 및 진술문이 일치합니다.'}],
-          '수정 요청': {
-            '코드불일치':     [{text:'교수·학습 계획 및 평가 방법과 평가 세부계획에 기재된 성취기준 코드가 상이합니다. 두 계획에 기재된 성취기준 코드가 일치하도록 수정하여 주시기 바랍니다.'}],
-            '개요세부불일치': [{text:'평가 개요에 제시된 성취기준 코드와 평가 세부계획에 기재된 성취기준 코드가 일치하지 않습니다. 평가 개요와 세부계획의 성취기준 코드가 동일하게 기재되도록 수정하여 주시기 바랍니다.'}],
-            '진술문수정':     [{text:'평가 세부계획에 기재된 성취기준 진술문이 교육과정에 제시된 원문과 다르게 임의로 수정되어 있습니다. 2022 개정 교육과정의 성취기준인지를 확인하여 교육과정 원문 그대로 기재하여 주시기 바랍니다.'}],
-            '코드진술누락':   [{text:'평가 세부계획에 성취기준 코드 또는 진술문이 기재되어 있지 않습니다. 해당 수행평가와 연계된 성취기준의 코드와 진술문을 모두 기재하여 주시기 바랍니다.'}]
-          }
+          '수정 요청': [{text:'교수·학습 및 평가 방법과 평가 세부계획의 성취기준 정보가 일치하지 않으므로, 성취기준 코드와 진술문을 동일하게 수정하여 주시기 바랍니다.'}]
         }
       },
       item1_1: {
@@ -2194,10 +1975,7 @@ function getFallbackLibrary() {
             {text:"'[수행평가명]'은 평가 방법만 강조되어 평가 요소가 모호합니다. 성취기준과 연계된 핵심 요소를 명칭에 반영해 주시기 바랍니다.", blanks:['수행평가명']},
             {text:"'[수행평가명]'은 평가 요소의 범위가 너무 넓고 추상적입니다. 핵심 내용이 직관적으로 드러나도록 명칭을 구체화해 주시기 바랍니다.", blanks:['수행평가명']}
           ],
-          '수정 요청': {
-            '요소없음':     [{text:"'[수행평가명]' 수행평가명에 평가 요소가 드러나지 않아 무엇을 평가하는지 파악하기 어렵습니다. 수행평가명은 평가 요소(무엇을)와 평가 방법(어떻게)이 함께 드러나도록 구성하여 주시기 바랍니다.", blanks:['수행평가명']}],
-            '서논술형명칭': [{text:"'[수행평가명]'은 서·논술형 평가 방법을 수행평가명으로 사용하고 있습니다. 서·논술형은 수행평가의 방법 중 하나이므로 수행평가명에는 평가 요소(무엇을 평가하는가)가 함께 드러나야 합니다. 예시와 같이 평가 요소와 평가 방법이 모두 드러나도록 수행평가명을 수정하고, 평가 방법란에 서술형 또는 논술형으로 명시하여 주시기 바랍니다. (예: 쟁점별 논증 구성과 토론 활동)"}]
-          }
+          '수정 요청': [{text:"'[수행평가명]' 수행평가명에 평가 요소가 드러나지 않아 무엇을 평가하는지 파악하기 어렵습니다. 수행평가명은 평가 요소(무엇을)와 평가 방법(어떻게)이 함께 드러나도록 구성하여 주시기 바랍니다.", blanks:['수행평가명']}]
         }
       },
       item3: {
@@ -2208,16 +1986,19 @@ function getFallbackLibrary() {
         sentences: {
           '적절': [{text:'수행과제의 성취수준이 성취기준에 근거하여 도달 정도를 구체적으로 진술하고 있으며, 성취수준에서 도출한 평가요소와 채점기준이 논리적으로 일관되게 연결되어 있습니다. 또한 채점기준이 평가요소의 성격(질적·양적)에 따라 적합한 방식으로 구분되어 있으며, 학생의 수행 결과를 관찰하고 즉시 판단할 수 있도록 구체적으로 기술되어 있습니다.'}],
           '수정 요청': {
-            '과제성취불일치': [{text:"'[수행평가명]'의 수행과제가 제시된 성취기준의 평가 요소를 실질적으로 측정하기 어려운 구조입니다. 수행과제가 성취기준에서 요구하는 지식·기능·태도를 직접적으로 확인할 수 있도록 수행과제와 성취기준 간의 연계성을 전면 재검토하여 주시기 바랍니다."}],
-            '과다통합':       [{text:"'[수행평가명]'에 지나치게 많은 성취기준이 하나의 수행과제로 통합되어 있어 각 성취기준에 대한 학생의 개별적 도달 정도를 정밀하게 판별하기 어렵습니다. 수행과제는 핵심 성취기준을 중심으로 구성하여 학생의 도달 정도를 변별력 있게 측정할 수 있도록 재검토하여 주시기 바랍니다."}],
-            '도달미반영':     [{text:"'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 적절하게 반영하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도가 구체적으로 드러나도록 성취수준을 보완하여 주시기 바랍니다."}],
-            '변별력미흡':     [{text:"'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 수준별로 변별력 있게 구분하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도를 변별력 있게 구분하여 성취도를 판별할 수 있도록 보완하여 주시기 바랍니다."}],
-            '단계형식일반':   [{text:"'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 5단계(A·B·C·D·E) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다."}],
+            '코드누락': [{text:"'[수행평가명]' 평가 세부계획에 누락된 성취기준의 진술문이 제시되어 있지 않습니다. 성취기준 진술문은 수행과제 및 채점기준 설계의 출발점이 되므로, 교육과정에 제시된 성취기준 진술문을 그대로 기재하여 주시기 바랍니다."}],
+            '과다통합': [{text:"'[수행평가명]'에 지나치게 많은 성취기준이 하나의 수행과제로 통합되어 있어 각 성취기준에 대한 학생의 개별적 도달 정도를 정밀하게 판별하기 어렵습니다. 수행과제는 핵심 성취기준을 중심으로 구성하여 학생의 도달 정도를 변별력 있게 측정할 수 있도록 재검토하여 주시기 바랍니다."}],
+            '도달미반영': [{text:"'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 적절하게 반영하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도가 구체적으로 드러나도록 성취수준을 보완하여 주시기 바랍니다."}],
+            '변별력미흡': [{text:"'[수행평가명]'의 성취수준 진술이 수행과제의 도달 정도를 수준별로 변별력 있게 구분하지 못하고 있습니다. 성취기준에 근거하여 수행과제의 도달 정도를 변별력 있게 구분하여 성취도를 판별할 수 있도록 보완하여 주시기 바랍니다."}],
+            '단계형식일반': [{text:"'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 5단계(A·B·C·D·E) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다."}],
             '단계형식예체능': [{text:"'[수행평가명]'의 성취수준 진술이 2022 개정 교육과정의 3단계(A·B·C) 형식으로 기술되어 있지 않습니다. 해당 형식에 맞게 수정하여 주시기 바랍니다."}],
-            '평가요소연결':   [{text:"'[수행평가명]'의 성취수준에서 도출한 평가요소와 채점기준의 평가요소 간 논리적 연결이 명확하지 않습니다. 성취수준에서 도출한 평가요소가 채점기준에 그대로 반영되어 있는지 상호 일치 여부를 재검토하여 주시기 바랍니다."}],
-            '총체적채점':     [{text:"'[수행평가명]'의 수행과제는 평가요소별 수행 수준을 구분하는 분석적 채점기준이 적합하나, 평가요소별 구분 없이 전체적인 인상으로 판단하는 총체적 채점기준으로 구성되어 있습니다. 평가요소별로 수행 수준의 차이가 드러나는 분석적 채점기준으로 재구성하여 주시기 바랍니다."}],
-            '질적양적':       [{text:"'[수행평가명]'의 채점기준이 질적 수준으로 구분되어야 하는 평가요소임에도 포함 요소의 개수·횟수 등 양적 기준으로만 처리되어 있어 수행 수준의 질적 차이를 판별하기 어렵습니다. 평가요소의 성격에 맞게 질적 수준이 드러나도록 채점기준을 수정하여 주시기 바랍니다."}],
-            '추상표현':       [{text:"'[수행평가명]'의 채점기준이 관찰 가능한 행동 수준이 아닌 추상적·주관적 표현으로 기술되어 있어 채점자 간 일관된 점수 부여가 어렵습니다. 학생의 수행 결과를 직접 관찰하고 즉시 판단할 수 있는 구체적인 행동 수준으로 채점기준을 수정하여 주시기 바랍니다."}]
+            '평가요소연결': [{text:"'[수행평가명]'의 성취수준에서 도출한 평가요소와 채점기준의 평가요소 간 논리적 연결이 명확하지 않습니다. 성취수준에서 도출한 평가요소가 채점기준에 그대로 반영되어 있는지 상호 일치 여부를 재검토하여 주시기 바랍니다."}],
+            '과제성취불일치': [{text:"'[수행평가명]'의 수행과제가 제시된 성취기준의 핵심 내용을 실질적으로 측정하기 어려운 구조입니다. 수행과제와 성취기준 간의 연계성을 전면 재검토하여 주시기 바랍니다."}],
+            '총체적채점': [{text:"'[수행평가명]'의 수행과제는 평가요소별 수행 수준을 구분하는 분석적 채점기준이 적합하나, 평가요소별 구분 없이 전체적인 인상으로 판단하는 총체적 채점기준으로 구성되어 있습니다. 평가요소별로 수행 수준의 차이가 드러나는 분석적 채점기준으로 재구성하여 주시기 바랍니다."}],
+            '질적양적': [{text:"'[수행평가명]'의 채점기준이 질적 수준으로 구분되어야 하는 평가요소임에도 포함 요소의 개수·횟수 등 양적 기준으로만 처리되어 있어 수행 수준의 질적 차이를 판별하기 어렵습니다. 평가요소의 성격에 맞게 질적 수준이 드러나도록 채점기준을 수정하여 주시기 바랍니다."}],
+            '추상표현': [{text:"'[수행평가명]'의 채점기준이 관찰 가능한 행동 수준이 아닌 추상적·주관적 표현으로 기술되어 있어 채점자 간 일관된 점수 부여가 어렵습니다. 학생의 수행 결과를 직접 관찰하고 즉시 판단할 수 있는 구체적인 행동 수준으로 채점기준을 수정하여 주시기 바랍니다."}],
+            '개수형': [{text:"'[수행평가명]'의 채점기준이 포함 요소의 개수로만 수행 수준을 구분하고 있어 수행의 질적 차이가 반영되지 않습니다. 또한 학생이 정답 항목을 사전에 유추할 수 있어 암기 유도의 가능성이 있습니다. 수행의 질적 차이가 드러나도록 채점기준을 수정하여 주시기 바랍니다."}],
+            '복합': [{text:"'[수행평가명]'에서 위에 제시된 사유들이 복합적으로 나타나 평가 세부계획의 전반적인 재구성이 필요합니다. 성취기준에서 출발하여 성취수준·평가요소·채점기준이 논리적으로 연결되도록 전면 재검토하여 주시기 바랍니다."}]
           }
         }
       },
@@ -2235,11 +2016,11 @@ function getFallbackLibrary() {
           '적절': [{text:'수행평가가 수업 중 교사의 직접 관찰 하에 학생의 사고 과정과 수행 역량을 확인할 수 있도록 설계되어 있으며, 성취평가제의 취지에 부합하는 과정 중심 평가로 판단됩니다.'}],
           '수정 요청': {
             '서논술암기형': [{text:"'[수행평가명]'은 서·논술형 평가로 계획되어 있으나, 탐구·분석·적용 등 사고 과정 없이 교과서 개념·공식·용어 등을 그대로 재현하거나 정해진 답을 서술하는 암기형으로 운영될 가능성이 높습니다. 성취기준에서 요구하는 사고 과정과 수행 역량이 드러날 수 있는 방식으로 수행과제를 재설계하여 주시기 바랍니다."}],
-            '서논술시험형': [{text:"'[수행평가명]'은 서·논술형 수행평가로 계획되어 있으나, 채점기준표를 사전에 공개하지 않는 대신 평가 범위나 문항을 미리 안내하는 방식은 먼저 평가를 치른 학급에서 정답이 유출되거나 과도한 사전 암기를 유발할 수 있어 수행평가의 공정성과 신뢰성을 저해합니다. 결과 중심의 지식 확인은 정기고사를 통해 평가하고, 수행평가는 교사의 관찰 하에 학생의 학습 과정과 수행 역량이 직접 확인될 수 있도록 평가 방식을 재검토하여 주시기 바랍니다."}],
+            '과제형완성': [{text:"'[수행평가명]'에 수업 중 완성하기 어려운 평가 요소가 포함되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 완성 가능한 범위와 방식으로 평가계획을 조정하여 주시기 바랍니다."}],
+            '과제형제출': [{text:"'[수행평가명]'의 평가계획서에 제출 기한이 명시되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 수행 가능한 방식으로 계획을 수정하여 주시기 바랍니다."}],
+            'AI대리수행': [{text:"'[수행평가명]'은 조사·분석·글쓰기 등 생성형 AI를 활용한 대리 수행 가능성을 배제하기 어려운 구조입니다. 평가의 공정성과 신뢰성을 확보하기 위해 평가계획서에 AI 활용 조건·제한·유의사항을 구체적으로 명시하여 주시기 바랍니다."}],
             '채점암기유도': [{text:"'[수행평가명]'의 채점기준에 정답의 개수·항목 수가 명시되어 있거나 교과서의 특정 개념·용어·내용을 그대로 서술하도록 요구하고 있어 사전 암기를 유도할 가능성이 있습니다. 학생의 사고 과정과 수행 역량의 질적 수준이 드러날 수 있도록 채점기준을 수정하여 주시기 바랍니다."}],
-            '과제형완성':   [{text:"'[수행평가명]'에 수업 중 완성하기 어려운 평가 요소가 포함되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 완성 가능한 범위와 방식으로 평가계획을 조정하여 주시기 바랍니다."}],
-            '과제형제출':   [{text:"'[수행평가명]'의 평가계획서에 제출 기한이 명시되어 있어 수업 외 가정에서 완성하여 제출하는 과제형 평가로 운영될 소지가 있습니다. 수행평가는 수업 중 교사의 관찰 하에 학생의 수행 과정을 직접 확인하는 것이 원칙이므로, 수업 중 수행 가능한 방식으로 계획을 수정하여 주시기 바랍니다."}],
-            'AI대리수행':   [{text:"'[수행평가명]'은 조사·분석·글쓰기 등 생성형 AI를 활용한 대리 수행 가능성을 배제하기 어려운 구조입니다. 평가의 공정성과 신뢰성을 확보하기 위해 평가계획서에 AI 활용 조건·제한·유의사항을 구체적으로 명시하여 주시기 바랍니다."}]
+            '채점기준표미제시': [{text:"'[수행평가명]'의 평가계획서에 채점기준표가 제시되어 있지 않으며, 채점기준의 내용이 정답을 암시하는 구조로 구성되어 있어 사전에 문항이나 정답 범위를 공개하는 방식의 암기형 평가로 운영될 가능성이 높습니다. 성취평가제의 취지에 부합하는 수행평가로 개선하여 주시기 바랍니다."}]
           }
         }
       },
