@@ -1525,7 +1525,7 @@ function buildOutputLines() {
     if (perf.item3.level) {
       lines.push(`   검토의견: ${perf.item3.level}`);
       if (perf.item3.level === '적절') {
-        const t3ok = LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
+        const t3ok = perf.item3.extra || LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
         if (t3ok) lines.push(`   → ${t3ok}`);
       } else if (perf.item3.extra) {
         perf.item3.extra.split('\n').forEach(line => {
@@ -1540,7 +1540,7 @@ function buildOutputLines() {
     if (perf.item4.level) {
       lines.push(`   검토의견: ${perf.item4.level}`);
       if (perf.item4.level === '적절') {
-        const t4ok = LIBRARY?.items?.item4?.sentences?.['적절']?.[0]?.text || '';
+        const t4ok = perf.item4.extra || LIBRARY?.items?.item4?.sentences?.['적절']?.[0]?.text || '';
         if (t4ok) lines.push(`   → ${t4ok}`);
       } else if (perf.item4.extra) {
         perf.item4.extra.split('\n').forEach(line => {
@@ -1555,7 +1555,7 @@ function buildOutputLines() {
     if (perf.item5.level) {
       lines.push(`   검토의견: ${perf.item5.level}`);
       if (perf.item5.level === '적절') {
-        const t5ok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
+        const t5ok = perf.item5.extra || LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
         if (t5ok) lines.push(`   → ${t5ok}`);
       } else if (perf.item5.extra) {
         perf.item5.extra.split('\n').forEach(line => {
@@ -1936,7 +1936,7 @@ async function downloadDocx() {
       body += makePara('▶ 항목 3 | 수행과제가 성취기준 도달 여부를 측정하도록 설계되었는지 여부 확인 – 성취기준·성취수준·평가요소·채점기준의 정합성 확인', { bold:true, color:C.req, spaceBefore:80, spaceAfter:20 });
       body += makePara(`점검 의견: ${perf.item3.level}`, { bold:true, color:levelColor(perf.item3.level), indent:200 });
       if (perf.item3.level === '적절') {
-        const tok = LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
+        const tok = perf.item3.extra || LIBRARY?.items?.item3_4_7_6?.sentences?.['적절']?.[0]?.text || '';
         if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
       } else if (perf.item3.extra) {
         perf.item3.extra.split('\n').forEach(line => {
@@ -1950,7 +1950,7 @@ async function downloadDocx() {
       body += makePara('▶ 항목 4 | 암기형·과제형·AI 대리 수행 가능 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
       body += makePara(`점검 의견: ${perf.item4.level}`, { bold:true, color:levelColor(perf.item4.level), indent:200 });
       if (perf.item4.level === '적절') {
-        const tok = LIBRARY?.items?.item4?.sentences?.['적절']?.[0]?.text || '';
+        const tok = perf.item4.extra || LIBRARY?.items?.item4?.sentences?.['적절']?.[0]?.text || '';
         if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
       } else if (perf.item4.extra) {
         perf.item4.extra.split('\n').forEach(line => {
@@ -1967,7 +1967,7 @@ async function downloadDocx() {
       body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold:true, color:C.navy, spaceBefore:80, spaceAfter:20 });
       body += makePara(`점검 의견: ${perf.item5.level}`, { bold:true, color:levelColor(perf.item5.level), indent:200 });
       if (perf.item5.level === '적절') {
-        const tok = LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
+        const tok = perf.item5.extra || LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
         if (tok) body += makePara(`→ ${tok}`, { color:C.ok, indent:200 });
       } else if (perf.item5.extra) {
         perf.item5.extra.split('\n').forEach(line => {
