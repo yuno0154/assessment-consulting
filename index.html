@@ -1572,6 +1572,7 @@
         <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="적절" onchange="onPerfItemChange(${i},'item5','적절')"><span class="ok">적절</span></label>
         <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="수정 요청" onchange="onPerfItemChange(${i},'item5','수정 요청')"><span class="req">수정 요청</span></label>
         <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="자유학기제" onchange="onPerfItemChange(${i},'item5','자유학기제')"><span class="skip">자유학기제 제외</span></label>
+        <label class="radio-btn"><input type="radio" name="perf-${i}-item5" value="채점기준표미제출" onchange="onPerfItemChange(${i},'item5','채점기준표미제출')"><span class="skip">채점기준표 미제출</span></label>
       </div>
       <div id="perf-${i}-item5-content">
         <div id="perf-${i}-item5-subtypes" style="display:none;">
@@ -1599,6 +1600,9 @@
       </div>
       <div id="perf-${i}-item5-freeperiod-notice" style="display:none;background:#e8e8e8;border-left:3px solid #888;border-radius:0 4px 4px 0;padding:10px 14px;margin-top:6px;font-size:12px;color:#444;font-weight:600;">
         ✅ 자유학기제 과목 — 항목 5 검토 제외됨 (점수 평가 미적용 과목)
+      </div>
+      <div id="perf-${i}-item5-nocriteria-notice" style="display:none;background:#fff3e0;border-left:3px solid #e65100;border-radius:0 4px 4px 0;padding:10px 14px;margin-top:6px;font-size:12px;color:#7d4a00;font-weight:600;">
+        ⚠️ 채점기준표 미제출 — 채점기준표 미제출로 인해 미응시·기본점수 부여에 대하여 확인할 수 없습니다. <span style="color:var(--req);">판정 불가</span>
       </div>
     </div>
   </div>`;
@@ -1668,15 +1672,19 @@
       const perf = state.performances[perfIdx];
       const perfName = document.getElementById(`perf-${perfIdx}-name`)?.value || `수행평가 ${perfIdx + 1}`;
 
-      // ── 항목5 자유학기제 처리 ──
+      // ── 항목5 자유학기제 / 채점기준표미제출 처리 ──
       if (itemKey === 'item5') {
         const isFree = level === '자유학기제';
+        const isNoCriteria = level === '채점기준표미제출';
         perf.item5.freeperiod = isFree;
+        perf.item5.nocriteria = isNoCriteria;
         const contentDiv = document.getElementById(`perf-${perfIdx}-item5-content`);
         const noticeDiv = document.getElementById(`perf-${perfIdx}-item5-freeperiod-notice`);
-        if (contentDiv) contentDiv.style.display = isFree ? 'none' : '';
+        const noCriteriaDiv = document.getElementById(`perf-${perfIdx}-item5-nocriteria-notice`);
+        if (contentDiv) contentDiv.style.display = (isFree || isNoCriteria) ? 'none' : '';
         if (noticeDiv) noticeDiv.style.display = isFree ? 'block' : 'none';
-        if (isFree) {
+        if (noCriteriaDiv) noCriteriaDiv.style.display = isNoCriteria ? 'block' : 'none';
+        if (isFree || isNoCriteria) {
           perf.item5.extra = '';
           perf.item5.selectedSubtypes = [];
           const ta = document.getElementById(`perf-${perfIdx}-item5-extra`);
@@ -2155,7 +2163,9 @@
         lines.push('▶ 항목 5  수행평가 미응시 학생에 대한 기본점수 부여 여부 확인');
         if (perf.item5.level) {
           lines.push(`   검토의견: ${perf.item5.level}`);
-          if (perf.item5.level === '적절') {
+          if (perf.item5.level === '채점기준표미제출') {
+            lines.push('   → 채점기준표 미제출로 인해 미응시·기본점수 부여에 대하여 확인할 수 없습니다. [판정 불가]');
+          } else if (perf.item5.level === '적절') {
             const t5ok = perf.item5.extra || LIBRARY?.items?.item5?.sentences?.['적절']?.[0]?.text || '';
             if (t5ok) lines.push(`   → ${t5ok}`);
           } else if (perf.item5.extra) {
@@ -2564,6 +2574,10 @@
         if (perf.item5.level === '자유학기제') {
           body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold: true, color: C.navy, spaceBefore: 80, spaceAfter: 20 });
           body += makePara('점검 의견: 해당 없음 (자유학기제 과목 — 점수 평가 미적용)', { bold: true, color: '666666', indent: 200 });
+        } else if (perf.item5.level === '채점기준표미제출') {
+          body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold: true, color: C.navy, spaceBefore: 80, spaceAfter: 20 });
+          body += makePara('점검 의견: 판정 불가 (채점기준표 미제출)', { bold: true, color: C.req || 'a32d2d', indent: 200 });
+          body += makePara('→ 채점기준표 미제출로 인해 미응시·기본점수 부여에 대하여 확인할 수 없습니다.', { color: C.navy, indent: 200 });
         } else if (perf.item5.level) {
           body += makePara('▶ 항목 5 | 수행평가 미응시 학생에 대한 기본점수 부여 여부 확인', { bold: true, color: C.navy, spaceBefore: 80, spaceAfter: 20 });
           body += makePara(`점검 의견: ${perf.item5.level}`, { bold: true, color: levelColor(perf.item5.level), indent: 200 });
@@ -2730,6 +2744,11 @@
             const noticeDiv = document.getElementById(`perf-${i}-item5-freeperiod-notice`);
             if (contentDiv) contentDiv.style.display = 'none';
             if (noticeDiv) noticeDiv.style.display = 'block';
+          } else if (perf.item5.level === '채점기준표미제출') {
+            const contentDiv = document.getElementById(`perf-${i}-item5-content`);
+            const noCriteriaDiv = document.getElementById(`perf-${i}-item5-nocriteria-notice`);
+            if (contentDiv) contentDiv.style.display = 'none';
+            if (noCriteriaDiv) noCriteriaDiv.style.display = 'block';
           }
           const radio = document.querySelector(`input[name="perf-${i}-item5"][value="${perf.item5.level}"]`);
           if (radio) {
@@ -2854,7 +2873,8 @@
               '수정 요청': {
                 '미응시기본점수': [{ text: "'[수행평가명]'에서 미응시·미참여 학생에게 기본점수를 부여하도록 명시되어 있습니다. 학업성적관리규정에 따라 수행평가에 참여하지 않은 학생은 0점으로 처리하여야 하므로, 해당 조항을 수정하여 주시기 바랍니다." }],
                 '처리기준미구분': [{ text: "'[수행평가명]'에서 미응시·미참여 학생과 참여했으나 최저 수행수준에 미치지 못한 학생에 대한 처리 기준이 구분되어 있지 않습니다. 미응시·미참여 학생은 0점으로 처리하고, 참여했으나 최저 수행수준에 미치지 못한 학생에게는 기본점수를 별도로 명시하여 주시기 바랍니다." }],
-                '기본점수과다': [{ text: "'[수행평가명]'에서 최저 수행수준에 미치지 못한 학생에게 부여되는 기본점수가 과도하게 높게 설정되어 있습니다. 기본점수는 수행평가에 참여했으나 최저 수행수준에 미치지 못한 학생에게 참여에 대한 최소한의 점수로 부여하는 것이므로, 적정 수준으로 조정하여 주시기 바랍니다." }]
+                '기본점수과다': [{ text: "'[수행평가명]'에서 최저 수행수준에 미치지 못한 학생에게 부여되는 기본점수가 과도하게 높게 설정되어 있습니다. 기본점수는 수행평가에 참여했으나 최저 수행수준에 미치지 못한 학생에게 참여에 대한 최소한의 점수로 부여하는 것이므로, 적정 수준으로 조정하여 주시기 바랍니다." }],
+                '채점기준표미제출': [{ text: "서·논술형 평가에서 채점기준표가 별첨으로 제시되지 않아 미응시·기본점수 부여에 대한 사항을 확인할 수 없습니다. 판정 불가." }]
               }
             }
           }
